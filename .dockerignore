@@ -1,0 +1,25 @@
+# Exclude git files
+.git
+.gitignore
+
+# Exclude local environment
+.venv
+.env
+.python-version
+__pycache__
+*.py[oc]
+
+# Exclude user data
+users.json
+
+# Exclude test and documentation
+tests/
+.coverage
+api-docs.json
+
+# Exclude project docs
+README.md
+stirlingpdf-assistant-plan.md
+walkthrough.md
+implementation_plan.md
+task.md
