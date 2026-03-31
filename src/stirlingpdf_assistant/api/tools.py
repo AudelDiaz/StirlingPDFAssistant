@@ -311,3 +311,89 @@ class ScannerEffectTool(BaseTool):
             "advancedEnabled": "false"
         }
         return files, data
+
+
+class SplitPDFTool(BaseTool):
+    """
+    Tool for splitting a PDF into separate files or extracting page ranges.
+    Based on /api/v1/general/split-pages
+    """
+    name = "split_pages"
+    description = "Splits a PDF or extracts specific pages/ranges (e.g., '1,3,5-10')."
+    endpoint = "/api/v1/general/split-pages"
+
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "file_content": {"type": "string", "format": "binary"},
+            "filename": {"type": "string", "default": "document.pdf"},
+            "page_numbers": {
+                "type": "string", 
+                "default": "all",
+                "description": "Pages to extract, e.g., '1,3,5-10' or 'all'."
+            }
+        },
+        "required": ["file_content"]
+    }
+
+    def prepare_payload(self, file_content: bytes, filename: str = "document.pdf", page_numbers: str = "all") -> Tuple[List[tuple], Dict[str, Any]]:
+        files = [("fileInput", (filename, file_content, "application/pdf"))]
+        data = {"pageNumbers": page_numbers}
+        return files, data
+
+
+class URLToPDFTool(BaseTool):
+    """
+    Tool for converting a website URL to a PDF document.
+    Based on /api/v1/convert/url/pdf
+    """
+    name = "url_to_pdf"
+    description = "Converts a public website URL into a clean PDF document."
+    endpoint = "/api/v1/convert/url/pdf"
+
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "url": {"type": "string", "description": "The full URL starting with http/https."},
+            "zoom": {"type": "number", "default": 1.0, "description": "Zoom level for rendering."}
+        },
+        "required": ["url"]
+    }
+
+    def prepare_payload(self, url: str, zoom: float = 1.0) -> Tuple[List[tuple], Dict[str, Any]]:
+        # This tool doesn't take a file input, only fields
+        return [], {"url": url, "zoom": str(zoom)}
+
+
+class AutoRedactTool(BaseTool):
+    """
+    Tool for automatically redacting text from a PDF.
+    Based on /api/v1/security/auto-redact
+    """
+    name = "auto_redact"
+    description = "Masks specific keywords or sensitive info in a PDF automatically."
+    endpoint = "/api/v1/security/auto-redact"
+
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "file_content": {"type": "string", "format": "binary"},
+            "filename": {"type": "string", "default": "document.pdf"},
+            "keywords": {
+                "type": "string", 
+                "description": "Comma-separated list of text to redact."
+            },
+            "case_sensitive": {"type": "boolean", "default": False},
+            "whole_word": {"type": "boolean", "default": False}
+        },
+        "required": ["file_content", "keywords"]
+    }
+
+    def prepare_payload(self, file_content: bytes, keywords: str, filename: str = "document.pdf", case_sensitive: bool = False, whole_word: bool = False) -> Tuple[List[tuple], Dict[str, Any]]:
+        files = [("fileInput", (filename, file_content, "application/pdf"))]
+        data = {
+            "listOfTextToRedact": keywords,
+            "caseSensitive": "true" if case_sensitive else "false",
+            "wholeWord": "true" if whole_word else "false"
+        }
+        return files, data

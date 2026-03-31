@@ -4,12 +4,19 @@ from stirlingpdf_assistant.api.tools import (
     CompressPDFTool, 
     OCRPDFTool, 
     MergePDFsTool, 
-    AddPasswordTool
+    AddPasswordTool,
+    ScannerEffectTool,
+    SplitPDFTool,
+    URLToPDFTool,
+    AutoRedactTool
 )
 
 def test_tool_schemas_are_valid():
     """Verify that each tool provides a valid JSON Schema."""
-    tools = [CompressPDFTool(), OCRPDFTool(), MergePDFsTool(), AddPasswordTool()]
+    tools = [
+        CompressPDFTool(), OCRPDFTool(), MergePDFsTool(), AddPasswordTool(),
+        ScannerEffectTool(), SplitPDFTool(), URLToPDFTool(), AutoRedactTool()
+    ]
     for tool in tools:
         schema = tool.input_schema
         assert isinstance(schema, dict)
@@ -55,3 +62,28 @@ def test_password_payload():
     
     assert data["password"] == "secret"
     assert data["keyLength"] == "128"
+
+def test_split_payload():
+    tool = SplitPDFTool()
+    content = b"fake pdf"
+    files, data = tool.prepare_payload(file_content=content, page_numbers="1-5")
+    
+    assert files[0][1][1] == content
+    assert data["pageNumbers"] == "1-5"
+
+def test_url_payload():
+    tool = URLToPDFTool()
+    files, data = tool.prepare_payload(url="https://google.com", zoom=1.5)
+    
+    assert len(files) == 0
+    assert data["url"] == "https://google.com"
+    assert data["zoom"] == "1.5"
+
+def test_redact_payload():
+    tool = AutoRedactTool()
+    content = b"fake pdf"
+    files, data = tool.prepare_payload(file_content=content, keywords="secret,admin", case_sensitive=True)
+    
+    assert files[0][1][1] == content
+    assert data["listOfTextToRedact"] == "secret,admin"
+    assert data["caseSensitive"] == "true"

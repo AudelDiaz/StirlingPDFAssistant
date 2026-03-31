@@ -4,7 +4,12 @@ from typing import List, Dict, Tuple
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from telegram.ext import ContextTypes
 from stirlingpdf_assistant.api.client import StirlingPDFClient
-from stirlingpdf_assistant.api.tools import CompressPDFTool, OCRPDFTool, AddPasswordTool, MergePDFsTool, ImagesToPDFTool, PdfToWordTool
+from stirlingpdf_assistant.api.tools import (
+    CompressPDFTool, OCRPDFTool, AddPasswordTool, MergePDFsTool, 
+    ImagesToPDFTool, PdfToWordTool, ScannerEffectTool, 
+    SplitPDFTool, AutoRedactTool, URLToPDFTool
+)
+import re
 from stirlingpdf_assistant.utils.user_manager import UserManager
 from stirlingpdf_assistant.utils.i18n import get_text
 
@@ -33,6 +38,9 @@ class BotHandlers:
         self.images_to_pdf_tool = ImagesToPDFTool()
         self.to_word_tool = PdfToWordTool()
         self.scanner_tool = ScannerEffectTool()
+        self.split_tool = SplitPDFTool()
+        self.redact_tool = AutoRedactTool()
+        self.url_tool = URLToPDFTool()
 
     def _t(self, update: Update, key: str, **kwargs) -> str:
         """Helper to get translated text based on user language."""
@@ -220,7 +228,9 @@ class BotHandlers:
              InlineKeyboardButton(self._t(update, "btn_ocr"), callback_data='action_ocr')],
             [InlineKeyboardButton(self._t(update, "btn_password"), callback_data='action_password'),
              InlineKeyboardButton(self._t(update, "btn_to_word"), callback_data='action_to_word')],
-            [InlineKeyboardButton(self._t(update, "btn_scanner"), callback_data='action_scanner')]
+            [InlineKeyboardButton(self._t(update, "btn_scanner"), callback_data='action_scanner'),
+             InlineKeyboardButton(self._t(update, "btn_split"), callback_data='action_split')],
+            [InlineKeyboardButton(self._t(update, "btn_redact"), callback_data='action_redact')]
         ]
         await update.message.reply_text(self._t(update, "msg_received_file", name=doc.file_name), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='Markdown')
 
@@ -260,6 +270,16 @@ class BotHandlers:
             context.chat_data['awaiting_password'] = True
             await query.edit_message_text(self._t(update, "action_password_prompt"))
             return
+            
+        if action == 'action_split':
+            context.chat_data['awaiting_split'] = True
+            await query.edit_message_text(self._t(update, "prompt_split_pages"))
+            return
+
+        if action == 'action_redact':
+            context.chat_data['awaiting_redact'] = True
+            await query.edit_message_text(self._t(update, "prompt_redact_text"))
+            return
 
         await query.edit_message_text(text=self._t(update, "action_processing"))
         async with self.semaphore:
@@ -292,19 +312,50 @@ class BotHandlers:
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=self._t(update, "err_generic", error=str(e)))
 
     async def handle_text(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if context.chat_data.get('awaiting_password'):
-            password = update.message.text
-            context.chat_data['awaiting_password'] = False
-            fid = context.chat_data.get('current_file_id')
-            fname = context.chat_data.get('current_file_name')
-            
-            status = await update.message.reply_text(self._t(update, "action_encrypting"))
+        text = update.message.text
+        chat_data = context.chat_data
+        
+        # 1. Check for URL input (Auto-convert to PDF)
+        url_match = re.search(r'(https?://\S+)', text)
+        if url_match and not any([chat_data.get('awaiting_password'), chat_data.get('awaiting_split'), chat_data.get('awaiting_redact')]):
+            url = url_match.group(1)
+            status = await update.message.reply_text(self._t(update, "action_converting_url"))
             async with self.semaphore:
                 try:
-                    tg_file = await context.bot.get_file(fid)
-                    content = bytes(await tg_file.download_as_bytearray())
-                    res = await self.stirling_client.execute(self.password_tool, file_content=content, password=password, filename=fname)
-                    await status.edit_text(self._t(update, "action_complete"))
-                    await context.bot.send_document(chat_id=update.effective_chat.id, document=res, filename=f"protected_{fname}")
+                    res = await self.stirling_client.execute(self.url_tool, url=url)
+                    await status.delete()
+                    await context.bot.send_document(chat_id=update.effective_chat.id, document=res, filename="webpage.pdf")
                 except Exception as e:
                     await status.edit_text(self._t(update, "err_generic", error=str(e)))
+            return
+
+        # 2. State-based Input Handling
+        if chat_data.get('awaiting_password'):
+            await self._process_tool_with_input(update, context, self.password_tool, "awaiting_password", "action_encrypting", "protected_", password=text)
+        elif chat_data.get('awaiting_split'):
+            await self._process_tool_with_input(update, context, self.split_tool, "awaiting_split", "action_splitting", "split_", page_numbers=text)
+        elif chat_data.get('awaiting_redact'):
+            await self._process_tool_with_input(update, context, self.redact_tool, "awaiting_redact", "action_redacting", "redacted_", keywords=text)
+
+    async def _process_tool_with_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE, tool, state_key: str, status_key: str, prefix: str, **kwargs):
+        """Generic helper for tools requiring text input."""
+        context.chat_data[state_key] = False
+        fid = context.chat_data.get('current_file_id')
+        fname = context.chat_data.get('current_file_name')
+        
+        if not fid:
+            await update.message.reply_text(self._t(update, "err_session_expired"))
+            return
+
+        status = await update.message.reply_text(self._t(update, "action_processing"))
+        await status.edit_text(self._t(update, status_key))
+        
+        async with self.semaphore:
+            try:
+                tg_file = await context.bot.get_file(fid)
+                content = bytes(await tg_file.download_as_bytearray())
+                res = await self.stirling_client.execute(tool, file_content=content, filename=fname, **kwargs)
+                await status.edit_text(self._t(update, "action_complete"))
+                await context.bot.send_document(chat_id=update.effective_chat.id, document=res, filename=f"{prefix}{fname}")
+            except Exception as e:
+                await status.edit_text(self._t(update, "err_generic", error=str(e)))
