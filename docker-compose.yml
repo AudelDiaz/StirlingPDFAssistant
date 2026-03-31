@@ -1,0 +1,10 @@
+services:
+  stirlingpdfassistant:
+    build: .
+    container_name: stirlingpdfassistant
+    restart: unless-stopped
+    volumes:
+      - ./users.json:/app/users.json
+    environment:
+      - PYTHONUNBUFFERED=1
+    env_file: .env
