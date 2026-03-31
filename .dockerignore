@@ -18,7 +18,6 @@ tests/
 api-docs.json
 
 # Exclude project docs
-README.md
 stirlingpdf-assistant-plan.md
 walkthrough.md
 implementation_plan.md
