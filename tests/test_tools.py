@@ -9,6 +9,11 @@ from stirlingpdf_assistant.api.tools import (
     SplitPDFTool,
     URLToPDFTool,
     AutoRedactTool
+    AddPasswordTool,
+    ScannerEffectTool,
+    SplitPDFTool,
+    URLToPDFTool,
+    AutoRedactTool
 )
 
 def test_tool_schemas_are_valid():
@@ -73,19 +78,17 @@ def test_split_payload():
 
 def test_url_payload():
     tool = URLToPDFTool()
-    files, data = tool.prepare_payload(url="https://google.com")
+    files, data = tool.prepare_payload(url="https://google.com", zoom=1.5)
     
     assert len(files) == 0
-    assert data["urlInput"] == "https://google.com"
-    assert "zoom" not in data
+    assert data["url"] == "https://google.com"
+    assert data["zoom"] == "1.5"
 
 def test_redact_payload():
     tool = AutoRedactTool()
     content = b"fake pdf"
-    files, data = tool.prepare_payload(file_content=content, keywords="secret,admin", use_regex=True)
+    files, data = tool.prepare_payload(file_content=content, keywords="secret,admin", case_sensitive=True)
     
     assert files[0][1][1] == content
-    assert data["listOfText"] == "secret,admin"
-    assert data["useRegex"] == "true"
-    assert data["redactColor"] == "#000000"
-    assert data["customPadding"] == "0"
+    assert data["listOfTextToRedact"] == "secret,admin"
+    assert data["caseSensitive"] == "true"
