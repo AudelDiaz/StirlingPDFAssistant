@@ -329,6 +329,14 @@ class BotHandlers:
                 else: return
 
                 await query.edit_message_text(self._t(update, "action_complete"))
+                
+                # ZIP vs PDF Detection
+                ext = ".zip" if res.startswith(b'PK\x03\x04') else ".pdf"
+                if "." in out:
+                    out = out.rsplit('.', 1)[0] + ext
+                else:
+                    out += ext
+                    
                 await context.bot.send_document(chat_id=update.effective_chat.id, document=res, filename=out)
             except Exception as e:
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=self._t(update, "err_generic", error=str(e)))
@@ -346,7 +354,9 @@ class BotHandlers:
                 try:
                     res = await self.stirling_client.execute(self.url_tool, url=url)
                     await status.delete()
-                    await context.bot.send_document(chat_id=update.effective_chat.id, document=res, filename="webpage.pdf")
+                    # ZIP vs PDF Detection
+                    ext = ".zip" if res.startswith(b'PK\x03\x04') else ".pdf"
+                    await context.bot.send_document(chat_id=update.effective_chat.id, document=res, filename=f"webpage{ext}")
                 except Exception as e:
                     await status.edit_text(self._t(update, "err_generic", error=str(e)))
             return
@@ -357,7 +367,9 @@ class BotHandlers:
         elif chat_data.get('awaiting_split'):
             await self._process_tool_with_input(update, context, self.split_tool, "awaiting_split", "action_splitting", "split_", page_numbers=text)
         elif chat_data.get('awaiting_redact'):
-            await self._process_tool_with_input(update, context, self.redact_tool, "awaiting_redact", "action_redacting", "redacted_", keywords=text)
+            # Sanitize keywords: replace newlines with commas for firewall safety
+            safe_text = text.replace('\n', ',')
+            await self._process_tool_with_input(update, context, self.redact_tool, "awaiting_redact", "action_redacting", "redacted_", keywords=safe_text)
 
     async def _process_tool_with_input(self, update: Update, context: ContextTypes.DEFAULT_TYPE, tool, state_key: str, status_key: str, prefix: str, **kwargs):
         """Generic helper for tools requiring text input."""
@@ -378,6 +390,12 @@ class BotHandlers:
                 content = bytes(await tg_file.download_as_bytearray())
                 res = await self.stirling_client.execute(tool, file_content=content, filename=fname, **kwargs)
                 await status.edit_text(self._t(update, "action_complete"))
-                await context.bot.send_document(chat_id=update.effective_chat.id, document=res, filename=f"{prefix}{fname}")
+                
+                # ZIP vs PDF Detection logic
+                is_zip = res.startswith(b'PK\x03\x04')
+                ext = ".zip" if is_zip else ".pdf"
+                final_name = f"{prefix}{fname.rsplit('.', 1)[0]}{ext}"
+                
+                await context.bot.send_document(chat_id=update.effective_chat.id, document=res, filename=final_name)
             except Exception as e:
                 await status.edit_text(self._t(update, "err_generic", error=str(e)))

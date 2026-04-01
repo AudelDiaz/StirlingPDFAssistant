@@ -354,15 +354,15 @@ class URLToPDFTool(BaseTool):
     input_schema = {
         "type": "object",
         "properties": {
-            "url": {"type": "string", "description": "The full URL starting with http/https."},
-            "zoom": {"type": "number", "default": 1.0, "description": "Zoom level for rendering."}
+            "url": {"type": "string", "description": "The full URL starting with http/https."}
         },
         "required": ["url"]
     }
 
-    def prepare_payload(self, url: str, zoom: float = 1.0) -> Tuple[List[tuple], Dict[str, Any]]:
+    def prepare_payload(self, url: str) -> Tuple[List[tuple], Dict[str, Any]]:
         # This tool doesn't take a file input, only fields
-        return [], {"url": url, "zoom": str(zoom)}
+        # Note: server expects 'urlInput'
+        return [], {"urlInput": url}
 
 
 class AutoRedactTool(BaseTool):
@@ -383,17 +383,20 @@ class AutoRedactTool(BaseTool):
                 "type": "string", 
                 "description": "Comma-separated list of text to redact."
             },
-            "case_sensitive": {"type": "boolean", "default": False},
+            "use_regex": {"type": "boolean", "default": False},
             "whole_word": {"type": "boolean", "default": False}
         },
         "required": ["file_content", "keywords"]
     }
 
-    def prepare_payload(self, file_content: bytes, keywords: str, filename: str = "document.pdf", case_sensitive: bool = False, whole_word: bool = False) -> Tuple[List[tuple], Dict[str, Any]]:
+    def prepare_payload(self, file_content: bytes, keywords: str, filename: str = "document.pdf", use_regex: bool = False, whole_word: bool = False) -> Tuple[List[tuple], Dict[str, Any]]:
         files = [("fileInput", (filename, file_content, "application/pdf"))]
         data = {
             "listOfText": keywords,
-            "caseSensitive": "true" if case_sensitive else "false",
-            "wholeWord": "true" if whole_word else "false"
+            "useRegex": "true" if use_regex else "false",
+            "wholeWordSearch": "true" if whole_word else "false",
+            "redactColor": "#000000",
+            "customPadding": "0",
+            "convertPDFToImage": "false"
         }
         return files, data
