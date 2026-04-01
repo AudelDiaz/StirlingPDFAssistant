@@ -85,5 +85,5 @@ def test_redact_payload():
     files, data = tool.prepare_payload(file_content=content, keywords="secret,admin", case_sensitive=True)
     
     assert files[0][1][1] == content
-    assert data["listOfTextToRedact"] == "secret,admin"
+    assert data["listOfText"] == "secret,admin"
     assert data["caseSensitive"] == "true"

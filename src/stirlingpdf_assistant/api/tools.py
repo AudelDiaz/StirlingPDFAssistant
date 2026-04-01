@@ -392,7 +392,7 @@ class AutoRedactTool(BaseTool):
     def prepare_payload(self, file_content: bytes, keywords: str, filename: str = "document.pdf", case_sensitive: bool = False, whole_word: bool = False) -> Tuple[List[tuple], Dict[str, Any]]:
         files = [("fileInput", (filename, file_content, "application/pdf"))]
         data = {
-            "listOfTextToRedact": keywords,
+            "listOfText": keywords,
             "caseSensitive": "true" if case_sensitive else "false",
             "wholeWord": "true" if whole_word else "false"
         }

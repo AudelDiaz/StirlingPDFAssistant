@@ -58,7 +58,7 @@ class StirlingPDFClient:
                 response = await client.post(
                     url,
                     headers=self.headers,
-                    files=files,
+                    files=files if files else {}, # Force multipart if no files
                     data=data
                 )
                 
