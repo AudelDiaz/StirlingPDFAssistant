@@ -9,6 +9,7 @@ class UserManager:
         self.file_path = file_path
         self.owner_id = owner_id
         self.allowed_ids: Set[int] = set()
+        self.settings = {}
         self.load()
 
     def load(self):
@@ -18,6 +19,7 @@ class UserManager:
                 with open(self.file_path, 'r') as f:
                     data = json.load(f)
                     self.allowed_ids = set(data.get("allowed_ids", []))
+                    self.settings = data.get("settings", {})
             except Exception as e:
                 logging.error(f"Error loading users file: {e}")
         
@@ -29,7 +31,10 @@ class UserManager:
         """Save current allowed IDs to JSON file."""
         try:
             with open(self.file_path, 'w') as f:
-                json.dump({"allowed_ids": list(self.allowed_ids)}, f)
+                json.dump({
+                    "allowed_ids": list(self.allowed_ids),
+                    "settings": self.settings
+                }, f)
         except Exception as e:
             logging.error(f"Error saving users file: {e}")
 
@@ -51,3 +56,12 @@ class UserManager:
 
     def is_authorized(self, user_id: int) -> bool:
         return user_id in self.allowed_ids
+
+    # --- Settings Management ---
+    
+    def get_setting(self, key: str, default: any = None) -> any:
+        return self.settings.get(key, default)
+
+    def set_setting(self, key: str, value: any):
+        self.settings[key] = value
+        self.save()

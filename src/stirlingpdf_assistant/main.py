@@ -54,7 +54,8 @@ async def post_init(application):
             BotCommand("help", "Show feature guide"),
             BotCommand("list_users", "📋 [Admin] Show authorized IDs"),
             BotCommand("add_user", "👤 [Admin] Authorize a user ID"),
-            BotCommand("remove_user", "❌ [Admin] Revoke access ID")
+            BotCommand("remove_user", "❌ [Admin] Revoke access ID"),
+            BotCommand("set_limit", "📈 [Admin] Set Max File Size (MB)")
         ]
         try:
             await application.bot.set_my_commands(
@@ -116,6 +117,7 @@ def main():
     application.add_handler(CommandHandler("add_user", owner_only(owner_id)(h.add_user_cmd)))
     application.add_handler(CommandHandler("remove_user", owner_only(owner_id)(h.remove_user_cmd)))
     application.add_handler(CommandHandler("list_users", owner_only(owner_id)(h.list_users_cmd)))
+    application.add_handler(CommandHandler("set_limit", owner_only(owner_id)(h.set_limit_cmd)))
     
     # Document, Photo, and interaction handlers
     application.add_handler(MessageHandler(filters.Document.ALL, restricted(user_manager)(h.handle_document)))

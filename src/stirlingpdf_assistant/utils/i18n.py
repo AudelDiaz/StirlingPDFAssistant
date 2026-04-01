@@ -58,7 +58,11 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "err_session_expired": "Session expired.",
         "err_generic": "❌ Error: {error}",
         "err_merge": "❌ Error during merge: {error}",
-        "msg_system_busy": "⏳ System busy. Your task has been queued and will start shortly..."
+        "msg_system_busy": "⏳ System busy. Your task has been queued and will start shortly...",
+        "admin_limit_usage": "Usage: `/set_limit <MB>`",
+        "admin_limit_range": "❌ Limit must be between 1 and 500 MB.",
+        "admin_limit_success": "✅ Max file size limit updated to **{new_limit}MB**",
+        "admin_limit_invalid": "❌ Invalid input. Use a number."
     },
     "es": {
         "start_greeting": "¡Hola {name}! 🤖 Soy tu Asistente Stirling PDF.\n\n• Envía cualquier **PDF** para acciones rápidas.\n• Envía **Fotos** para convertirlas o /merge.\n• Envía un **Link** para convertir una web a PDF.\n• Escribe /help para la guía completa.",
@@ -117,7 +121,11 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "err_session_expired": "Sesión expirada.",
         "err_generic": "❌ Error: {error}",
         "err_merge": "❌ Error durante la unión: {error}",
-        "msg_system_busy": "⏳ Sistema ocupado. Tu tarea ha sido encolada y empezará en breve..."
+        "msg_system_busy": "⏳ Sistema ocupado. Tu tarea ha sido encolada y empezará en breve...",
+        "admin_limit_usage": "Uso: `/set_limit <MB>`",
+        "admin_limit_range": "❌ El límite debe estar entre 1 y 500 MB.",
+        "admin_limit_success": "✅ Límite de tamaño máximo actualizado a **{new_limit}MB**",
+        "admin_limit_invalid": "❌ Entrada inválida. Usa un número."
     }
 }
 

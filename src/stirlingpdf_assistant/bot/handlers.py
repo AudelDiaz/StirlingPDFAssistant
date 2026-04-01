@@ -25,7 +25,9 @@ class BotHandlers:
         self.stirling_client = stirling_client
         self.user_manager = user_manager
         self.owner_id = owner_id
-        self.max_file_size_mb = max_file_size_mb
+        
+        # Load persistent setting or fallback to provided value (from .env)
+        self.max_file_size_mb = self.user_manager.get_setting("max_file_size_mb", max_file_size_mb)
         
         # Concurrency Safeguard
         self.semaphore = asyncio.Semaphore(max_concurrent_tasks)
@@ -57,9 +59,13 @@ class BotHandlers:
             f"{self._t(update, 'help_usage')}\n\n"
             f"{self._t(update, 'help_core')}\n\n"
             f"{self._t(update, 'help_advanced')}\n\n"
-            f"{self._t(update, 'help_system', max_size=self.max_file_size_mb)}\n\n"
-            f"{self._t(update, 'help_admin')}"
         )
+        
+        # Only show system limits to the owner
+        if update.effective_user.id == self.owner_id:
+            help_text += f"{self._t(update, 'help_system', max_size=self.max_file_size_mb)}\n\n"
+            
+        help_text += self._t(update, 'help_admin')
         await update.message.reply_text(help_text, parse_mode='Markdown')
 
     # --- Admin Handlers ---
@@ -85,6 +91,22 @@ class BotHandlers:
             if self.user_manager.remove_user(target_id): 
                 await update.message.reply_text(self._t(update, "auth_removed", user_id=target_id))
         except: pass
+
+    async def set_limit_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not context.args:
+            await update.message.reply_text(self._t(update, "admin_limit_usage"), parse_mode='Markdown')
+            return
+        try:
+            new_limit = int(context.args[0])
+            if new_limit < 1 or new_limit > 500:
+                await update.message.reply_text(self._t(update, "admin_limit_range"))
+                return
+            
+            self.max_file_size_mb = new_limit
+            self.user_manager.set_setting("max_file_size_mb", new_limit)
+            await update.message.reply_text(self._t(update, "admin_limit_success", new_limit=new_limit), parse_mode='Markdown')
+        except:
+            await update.message.reply_text(self._t(update, "admin_limit_invalid"))
 
     # --- Access Request ---
 
