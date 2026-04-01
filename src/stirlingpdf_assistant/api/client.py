@@ -53,13 +53,26 @@ class StirlingPDFClient:
         logger.info(f"Executing Tool: {tool.name} at {url}")
         
         # 3. Perform Asynchronous POST Request
+        # Merge all data into files list for multipart/form-data stability.
+        # This ensures Stirling PDF v2.8+ strictly receives multipart as it expects.
+        multipart_parts = []
+        if files:
+            multipart_parts.extend(files)
+        
+        if data:
+            for key, value in data.items():
+                if isinstance(value, list):
+                    for v in value:
+                        multipart_parts.append((key, (None, str(v))))
+                else:
+                    multipart_parts.append((key, (None, str(value))))
+
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 response = await client.post(
                     url,
                     headers=self.headers,
-                    files=files if files else {}, # Force multipart if no files
-                    data=data
+                    files=multipart_parts
                 )
                 
                 # Check for success
