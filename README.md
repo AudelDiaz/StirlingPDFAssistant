@@ -24,6 +24,32 @@ The project uses a **Modular Tool Architecture**:
 - Highly scalable and aligned with the **Model Context Protocol (MCP)**.
 - Hybrid state management for complex multi-step operations (Merging, Redacting).
 
+## 📚 Documentation
+
+Detailed documentation is available in the `docs/` folder:
+
+- **[Architecture](docs/architecture.md)**: High-level overview of the system components and data flow.
+- **[API Integration](docs/api_integration.md)**: Details on how the bot communicates with Stirling PDF and the "Tool" pattern.
+- **[Bot Commands & Features](docs/commands.md)**: A comprehensive guide to all available commands and PDF operations.
+- **[User Management](docs/user_management.md)**: Explains the security model, whitelisting, and owner approval workflow.
+- **[Technical Summary](docs/technical_summary.md)**: A deep dive into the technologies, security, and future roadmap.
+
+## 📂 Project Structure
+
+```text
+stirlingpdf-assistant/
+├── docs/               # Detailed documentation
+├── src/
+│   └── stirlingpdf_assistant/
+│       ├── api/        # Stirling PDF API client and Tool definitions
+│       ├── bot/        # Telegram bot handlers and decorators
+│       ├── utils/      # I18n, user management, and common utilities
+│       └── main.py     # Application entry point
+├── tests/              # Test suite for API and logic
+├── Dockerfile          # Multi-stage Docker build
+└── pyproject.toml      # Project dependencies and metadata
+```
+
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
