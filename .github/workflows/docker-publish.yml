@@ -14,7 +14,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Restrict permissions for the GITHUB_TOKEN for security
     permissions:
       contents: read
       packages: write
@@ -28,12 +27,12 @@ jobs:
 
       - name: Set up Docker Buildx
         # v3.10.0
-        uses: docker/setup-buildx-action@d79b4da158f33273c656a5870fd51901c09b1ffc
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
         # v3.3.0
-        uses: docker/login-action@0d4c9c5ea7693da7b06919503d52da8da7c93104
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -42,7 +41,7 @@ jobs:
       - name: Extract Docker metadata
         id: meta
         # v5.7.0
-        uses: docker/metadata-action@902fa8e8d139fd5cb9f20713e309711687d46afb
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -66,7 +65,7 @@ jobs:
 
       # Security Scanning: Use Trivy to find vulnerabilities
       - name: Run Trivy vulnerability scanner
-        # v0.35.0 - Safe version after March 2026 incident
+        # v0.35.0
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
@@ -86,6 +85,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Reuse cache from the build step
           cache-from: type=gha
           cache-to: type=gha,mode=max
