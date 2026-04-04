@@ -1,35 +1,95 @@
-# Stirling PDF Assistant
+# 🛰️ Stirling PDF Assistant
 
-A powerful, private Telegram Bot that serves as a bridge to your self-hosted [Stirling PDF](https://github.com/Stirling-Tools/Stirling-PDF) instance.
+A production-grade Telegram bot optimized for **Raspberry Pi** and low-resource environments. It provides a secure, multilingual interface for performing powerful PDF operations via a private [Stirling PDF](https://github.com/Stirling-Tools/Stirling-PDF) instance.
 
-## 🚀 Overview
+![PDF Assistant](https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/main/docs/stirling-pdf-logo.png)
 
-The Stirling PDF Assistant allows you to perform complex PDF operations directly from Telegram. It's designed to run on resource-constrained hardware like a Raspberry Pi 4B, providing a sleek interface for OCR, compression, merging, and more.
+## 🌟 Key Features
 
-## 📖 Documentation
+- **🛡️ Secure Access**: Built-in User Management System with Owner Approval workflow.
+- **🌍 Multilingual**: Native English and Spanish support with automatic language detection.
+- **⚡ Resource Aware**: Concurrency throttling (Semaphores) and file size safeguards to protect your Raspberry Pi.
+- **📝 Private OCR**: Optical Character Recognition using your own Stirling instance.
+- **✂️ Advanced Tools**:
+  - **Auto Redact**: Mask sensitive info (emails, IDs) automatically.
+  - **Split PDF**: Extract specific page ranges (e.g., `1,3,5-10`).
+  - **URL to PDF**: Send a link, get a clean PDF document back instantly.
+  - **Hybrid Merge**: Mix Photos and PDFs into a single document seamlessly.
+  - **Scanner Effect**: Make digital docs look like scanned paper documents.
 
-Detailed documentation is available in the `docs` folder:
+## 🏗️ Architecture
 
--   [**Technical Summary**](docs/technical_summary.md): High-level project overview and technology stack.
--   [**System Architecture**](docs/architecture.md): Deep dive into the component design and data flow.
--   [**API Integration**](docs/api_integration.md): Understanding the modular "Tool" pattern and Stirling PDF communication.
--   [**User Management**](docs/user_management.md): Details on security, whitelisting, and access requests.
--   [**Bot Commands & Features**](docs/commands.md): A complete guide to using the bot.
+The project uses a **Modular Tool Architecture**:
+- Each PDF operation is a self-documenting Class.
+- Highly scalable and aligned with the **Model Context Protocol (MCP)**.
+- Hybrid state management for complex multi-step operations (Merging, Redacting).
 
-## 🛠️ Quick Start
+## 📚 Documentation
 
-1.  **Clone the repository**.
-2.  **Configure environment variables**: Copy `.env.example` to `.env` and fill in your `TELEGRAM_BOT_TOKEN`, `STIRLING_PDF_URL`, and `BOT_OWNER_ID`.
-3.  **Run with Docker**:
-    ```bash
-    docker-compose up -d
-    ```
-4.  **Install locally (Development)**:
-    ```bash
-    uv sync
-    stirling-bot
-    ```
+Detailed documentation is available in the `docs/` folder:
 
-## ⚖️ License
+- **[Architecture](docs/architecture.md)**: High-level overview of the system components and data flow.
+- **[API Integration](docs/api_integration.md)**: Details on how the bot communicates with Stirling PDF and the "Tool" pattern.
+- **[Bot Commands & Features](docs/commands.md)**: A comprehensive guide to all available commands and PDF operations.
+- **[User Management](docs/user_management.md)**: Explains the security model, whitelisting, and owner approval workflow.
+- **[Technical Summary](docs/technical_summary.md)**: A deep dive into the technologies, security, and future roadmap.
 
-This project is open-source. See the LICENSE file (if available) for details.
+## 📂 Project Structure
+
+```text
+stirlingpdf-assistant/
+├── docs/               # Detailed documentation
+├── src/
+│   └── stirlingpdf_assistant/
+│       ├── api/        # Stirling PDF API client and Tool definitions
+│       ├── bot/        # Telegram bot handlers and decorators
+│       ├── utils/      # I18n, user management, and common utilities
+│       └── main.py     # Application entry point
+├── tests/              # Test suite for API and logic
+├── Dockerfile          # Multi-stage Docker build
+└── pyproject.toml      # Project dependencies and metadata
+```
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- Python 3.10+
+- [uv](https://github.com/astral-sh/uv) (Recommended) or `pip`
+- A running Stirling PDF instance with API enabled.
+
+### 2. Configuration
+Create a `.env` file from the example:
+```bash
+cp .env.example .env
+```
+Key variables:
+- `TELEGRAM_BOT_TOKEN`: Your bot token from @BotFather.
+- `STIRLING_PDF_URL`: Your Stirling PDF endpoint.
+- `STIRLING_PDF_API_KEY`: Your Stirling API Key.
+- `BOT_OWNER_ID`: Your Telegram User ID.
+
+### 3. Installation & Run
+Using `uv`:
+```bash
+uv venv
+source .venv/bin/activate
+uv sync
+python -m stirlingpdf_assistant.main
+```
+
+Using Docker:
+```bash
+docker-compose up -d --build
+```
+
+## 🐋 Docker & Raspberry Pi Optimization
+The included `Dockerfile` uses a multi-stage build and a non-root user for maximum security and reduced image size, making it ideal for 64-bit ARM boards (Pi 4/5).
+
+## 🧪 Testing & Validation
+A live validation suite is included to ensure your Stirling PDF API is compatible:
+```bash
+python scripts/api_validate.py
+```
+
+## 📜 License
+MIT License. See `LICENSE` for details.

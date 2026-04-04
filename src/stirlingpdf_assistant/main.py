@@ -2,7 +2,7 @@ import os
 import logging
 import asyncio
 from dotenv import load_dotenv
-from telegram import Update, BotCommand
+from telegram import Update, BotCommand, BotCommandScopeChat
 from telegram.ext import (
     ApplicationBuilder, 
     CommandHandler, 
@@ -44,6 +44,28 @@ async def post_init(application):
         BotCommand("help", "Ver guía de funciones")
     ]
     await application.bot.set_my_commands(es_commands, language_code='es')
+    
+    # --- Owner-Specific Commands (Private Admin Menu) ---
+    owner_id = int(os.getenv("BOT_OWNER_ID", "0"))
+    if owner_id:
+        admin_commands = [
+            BotCommand("start", "Start the bot"),
+            BotCommand("merge", "Enter Merge Mode"),
+            BotCommand("help", "Show feature guide"),
+            BotCommand("list_users", "📋 [Admin] Show authorized IDs"),
+            BotCommand("add_user", "👤 [Admin] Authorize a user ID"),
+            BotCommand("remove_user", "❌ [Admin] Revoke access ID"),
+            BotCommand("set_limit", "📈 [Admin] Set Max File Size (MB)")
+        ]
+        try:
+            await application.bot.set_my_commands(
+                admin_commands, 
+                scope=BotCommandScopeChat(chat_id=owner_id)
+            )
+            logger.info(f"Private Admin Menu set for owner ID: {owner_id}")
+        except Exception as e:
+            logger.warning(f"Could not set admin commands: {e}")
+            
     logger.info("Bot commands set for English and Spanish.")
 
 def main():
@@ -95,6 +117,7 @@ def main():
     application.add_handler(CommandHandler("add_user", owner_only(owner_id)(h.add_user_cmd)))
     application.add_handler(CommandHandler("remove_user", owner_only(owner_id)(h.remove_user_cmd)))
     application.add_handler(CommandHandler("list_users", owner_only(owner_id)(h.list_users_cmd)))
+    application.add_handler(CommandHandler("set_limit", owner_only(owner_id)(h.set_limit_cmd)))
     
     # Document, Photo, and interaction handlers
     application.add_handler(MessageHandler(filters.Document.ALL, restricted(user_manager)(h.handle_document)))

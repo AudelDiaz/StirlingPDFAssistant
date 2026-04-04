@@ -15,6 +15,6 @@ wheels/
 .env
 users.json
 
-# Test and Documentation artifacts
-.coverage
-api-docs.json
+# API Snapshots
+api-*.json
+api_spec.json
