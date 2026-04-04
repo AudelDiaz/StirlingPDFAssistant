@@ -22,17 +22,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        # v4.2.2
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        # v4 (Latest commit as of check)
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
 
       - name: Set up Docker Buildx
-        # v3.10.0
-        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
+        # v3 (Latest commit as of check)
+        uses: docker/setup-buildx-action@21162887f0d6e25b4e8eafb0cf44cf9bf7f6acd3
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
-        # v3.3.0
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        # v3 (Latest commit as of check)
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -40,8 +40,8 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        # v5.7.0
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
+        # v5 (Latest commit as of check)
+        uses: docker/metadata-action@c3b064c6d7c32446d6bc214ea075f1caad2de35a
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -52,8 +52,8 @@ jobs:
 
       - name: Build Docker image (locally for scanning)
         id: build
-        # v6.15.0
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
+        # v6 (Latest commit as of check)
+        uses: docker/build-push-action@83bfd93ab480705a7b99a2ed02765137f5ab55ba
         with:
           context: .
           push: false
@@ -65,7 +65,7 @@ jobs:
 
       # Security Scanning: Use Trivy to find vulnerabilities
       - name: Run Trivy vulnerability scanner
-        # v0.35.0
+        # v0.35.0 (Latest commit as of check)
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
@@ -78,8 +78,8 @@ jobs:
       - name: Push Docker image
         # Only push if it's not a PR and after successful scan
         if: github.event_name != 'pull_request'
-        # v6.15.0
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294
+        # v6 (Latest commit as of check)
+        uses: docker/build-push-action@83bfd93ab480705a7b99a2ed02765137f5ab55ba
         with:
           context: .
           push: true
