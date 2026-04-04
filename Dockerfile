@@ -2,6 +2,13 @@
 # Use Python 3.14 for development and build-time optimizations
 FROM python:3.14-slim AS builder
 
+# Update OS packages and install build essentials if needed
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and setuptools to fix known vulnerabilities
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
 # Install uv for fast dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
