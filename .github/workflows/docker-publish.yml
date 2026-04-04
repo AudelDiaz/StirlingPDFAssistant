@@ -18,22 +18,22 @@ jobs:
     permissions:
       contents: read
       packages: write
-      security-events: write # Required for uploading SARIF results if we added that
-      id-token: write # Required for some OIDC integrations
+      security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
-        # v4.2.2 - Pinned by SHA
+        # v4.2.2
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Set up Docker Buildx
-        # v3.10.0 - Verified SHA
-        uses: docker/setup-buildx-action@f7ce87c5730ee62e3f960b6666d2a19641b062a2
+        # v3.10.0
+        uses: docker/setup-buildx-action@d79b4da158f33273c656a5870fd51901c09b1ffc
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
-        # v3.3.0 - Verified SHA
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        # v3.3.0
+        uses: docker/login-action@0d4c9c5ea7693da7b06919503d52da8da7c93104
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -41,8 +41,8 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        # v5.7.0 - Verified SHA
-        uses: docker/metadata-action@369eb591f429131d6889c46b66e8d2079ff2fa26
+        # v5.7.0
+        uses: docker/metadata-action@902fa8e8d139fd5cb9f20713e309711687d46afb
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -53,8 +53,8 @@ jobs:
 
       - name: Build Docker image (locally for scanning)
         id: build
-        # v6.15.0 - Verified SHA
-        uses: docker/build-push-action@0fb98e08a3343626027739a83607312ad523df31
+        # v6.15.0
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4
         with:
           context: .
           push: false
@@ -79,9 +79,8 @@ jobs:
       - name: Push Docker image
         # Only push if it's not a PR and after successful scan
         if: github.event_name != 'pull_request'
-        # v6.15.0 - Verified SHA
-        uses: docker/build-push-action@0fb98e08a3343626027739a83607312ad523df31
-
+        # v6.15.0
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4
         with:
           context: .
           push: true
