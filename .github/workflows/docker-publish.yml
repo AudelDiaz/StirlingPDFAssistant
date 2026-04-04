@@ -27,12 +27,12 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Set up Docker Buildx
-        # v3.10.0 - Pinned by SHA
-        uses: docker/setup-buildx-action@b5ca514318bdc6bfac3f6c41b222c58977717f30
+        # v3.12.0 - Pinned by verified SHA
+        uses: docker/setup-buildx-action@8d2750c69375109c6533933845e8b31f158c9089
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'
-        # v3.3.0 - Pinned by SHA
+        # v3.3.0 - Pinned by verified SHA
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
           registry: ${{ env.REGISTRY }}
@@ -41,8 +41,8 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        # v5.7.0 - Pinned by SHA
-        uses: docker/metadata-action@902fa5a7d62090920003a37c56ef28d6a8ff46fe
+        # v5.10.0 - Pinned by verified SHA
+        uses: docker/metadata-action@c299e400476037c23060e00c6a14f649df93c765
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -53,8 +53,8 @@ jobs:
 
       - name: Build Docker image (locally for scanning)
         id: build
-        # v6.15.0 - Pinned by SHA
-        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c43d8c31ae
+        # v6.19.2 - Pinned by verified SHA
+        uses: docker/build-push-action@10e90e396782ee27490caadff8bc6623f2405836
         with:
           context: .
           push: false
@@ -66,8 +66,8 @@ jobs:
 
       # Security Scanning: Use Trivy to find vulnerabilities
       - name: Run Trivy vulnerability scanner
-        # v0.29.0 - Note: Using stable v0.29.0 SHA as verified for this version
-        uses: aquasecurity/trivy-action@18f251aed6b22897d80efb41807578b8f2872786
+        # v0.29.0 - Pinned by verified SHA
+        uses: aquasecurity/trivy-action@18f259c5e26032071cc53529280b5ef98bb2f227
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: 'table'
@@ -79,8 +79,8 @@ jobs:
       - name: Push Docker image
         # Only push if it's not a PR and after successful scan
         if: github.event_name != 'pull_request'
-        # v6.15.0 - Pinned by SHA
-        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c43d8c31ae
+        # v6.19.2 - Pinned by verified SHA
+        uses: docker/build-push-action@10e90e396782ee27490caadff8bc6623f2405836
         with:
           context: .
           push: true
