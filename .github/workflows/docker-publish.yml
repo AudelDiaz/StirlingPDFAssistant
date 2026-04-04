@@ -1,0 +1,91 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Restrict permissions for the GITHUB_TOKEN for security
+    permissions:
+      contents: read
+      packages: write
+      security-events: write # Required for uploading SARIF results if we added that
+      id-token: write # Required for some OIDC integrations
+
+    steps:
+      - name: Checkout repository
+        # v4.2.2 - Pinned by SHA
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Set up Docker Buildx
+        # v3.10.0 - Pinned by SHA
+        uses: docker/setup-buildx-action@b5ca514318bdc6bfac3f6c41b222c58977717f30
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        # v3.3.0 - Pinned by SHA
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        # v5.7.0 - Pinned by SHA
+        uses: docker/metadata-action@902fa5a7d62090920003a37c56ef28d6a8ff46fe
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha,format=long
+
+      - name: Build Docker image (locally for scanning)
+        id: build
+        # v6.15.0 - Pinned by SHA
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c43d8c31ae
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Security Scanning: Use Trivy to find vulnerabilities
+      - name: Run Trivy vulnerability scanner
+        # v0.29.0 - Note: Using stable v0.29.0 SHA as verified for this version
+        uses: aquasecurity/trivy-action@18f251aed6b22897d80efb41807578b8f2872786
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Push Docker image
+        # Only push if it's not a PR and after successful scan
+        if: github.event_name != 'pull_request'
+        # v6.15.0 - Pinned by SHA
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c43d8c31ae
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Reuse cache from the build step
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
