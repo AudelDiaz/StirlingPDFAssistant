@@ -8,19 +8,16 @@ from stirlingpdf_assistant.api.tools import (
     ScannerEffectTool,
     SplitPDFTool,
     URLToPDFTool,
-    AutoRedactTool
-    AddPasswordTool,
-    ScannerEffectTool,
-    SplitPDFTool,
-    URLToPDFTool,
-    AutoRedactTool
+    AutoRedactTool,
+    MarkdownToPDFTool
 )
 
 def test_tool_schemas_are_valid():
     """Verify that each tool provides a valid JSON Schema."""
     tools = [
         CompressPDFTool(), OCRPDFTool(), MergePDFsTool(), AddPasswordTool(),
-        ScannerEffectTool(), SplitPDFTool(), URLToPDFTool(), AutoRedactTool()
+        ScannerEffectTool(), SplitPDFTool(), URLToPDFTool(), AutoRedactTool(),
+        MarkdownToPDFTool()
     ]
     for tool in tools:
         schema = tool.input_schema
@@ -92,3 +89,14 @@ def test_redact_payload():
     assert files[0][1][1] == content
     assert data["listOfTextToRedact"] == "secret,admin"
     assert data["caseSensitive"] == "true"
+
+def test_markdown_payload():
+    tool = MarkdownToPDFTool()
+    content = b"fake md"
+    files, data = tool.prepare_payload(file_content=content, filename="test.md")
+    
+    assert files[0][0] == "fileInput"
+    assert files[0][1][0] == "test.md"
+    assert files[0][1][1] == content
+    assert files[0][1][2] == "text/markdown"
+    assert len(data) == 0
