@@ -513,3 +513,30 @@ class AutoRedactTool(BaseTool):
             "wholeWord": "true" if whole_word else "false",
         }
         return files, data
+
+
+class MarkdownToPDFTool(BaseTool):
+    """
+    Tool for converting a Markdown file to a PDF document.
+    Based on /api/v1/convert/markdown/pdf
+    """
+
+    name = "markdown_to_pdf"
+    description = "Converts a Markdown file (.md) into a PDF document."
+    endpoint = "/api/v1/convert/markdown/pdf"
+
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "file_content": {"type": "string", "format": "binary"},
+            "filename": {"type": "string", "default": "document.md"},
+        },
+        "required": ["file_content"],
+    }
+
+    def prepare_payload(
+        self, file_content: bytes, filename: str = "document.md", **kwargs
+    ) -> Tuple[List[tuple], Dict[str, Any]]:
+        # Using mime type text/markdown, but Stirling handles it natively via endpoint
+        files = [("fileInput", (filename, file_content, "text/markdown"))]
+        return files, {}

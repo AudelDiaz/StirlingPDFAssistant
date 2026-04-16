@@ -42,4 +42,4 @@ async def test_stirling_ocr_mocked():
         mock_post.assert_called_once()
         # Verify data passed
         args, kwargs = mock_post.call_args
-        assert kwargs["data"]["languages"] == ["spa"]
+        assert ("languages", (None, "spa")) in kwargs["files"]

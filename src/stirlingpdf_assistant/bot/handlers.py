@@ -22,6 +22,7 @@ from stirlingpdf_assistant.api.tools import (
     SplitPDFTool,
     AutoRedactTool,
     URLToPDFTool,
+    MarkdownToPDFTool,
 )
 import re
 from stirlingpdf_assistant.api.tools import (
@@ -75,6 +76,7 @@ class BotHandlers:
         self.split_tool = SplitPDFTool()
         self.redact_tool = AutoRedactTool()
         self.url_tool = URLToPDFTool()
+        self.md_tool = MarkdownToPDFTool()
 
     def _t(self, update: Update, key: str, **kwargs) -> str:
         """Helper to get translated text based on user language."""
@@ -362,12 +364,30 @@ class BotHandlers:
             )
             return
 
-        if doc.mime_type != "application/pdf":
+        is_pdf = doc.mime_type == "application/pdf"
+        is_md = doc.file_name and doc.file_name.lower().endswith(".md")
+
+        if not is_pdf and not is_md:
             await update.message.reply_text(self._t(update, "msg_send_pdf_hint"))
             return
 
         context.chat_data["current_file_id"] = doc.file_id
-        context.chat_data["current_file_name"] = doc.file_name or "document.pdf"
+        context.chat_data["current_file_name"] = doc.file_name or ("document.md" if is_md else "document.pdf")
+
+        if is_md:
+            keyboard = [
+                [
+                    InlineKeyboardButton(
+                        self._t(update, "btn_md_to_pdf"), callback_data="action_md_to_pdf"
+                    )
+                ]
+            ]
+            await update.message.reply_text(
+                self._t(update, "msg_received_md", name=doc.file_name),
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown",
+            )
+            return
 
         keyboard = [
             [
@@ -500,6 +520,12 @@ class BotHandlers:
                     )
                     if not out.endswith(".pdf"):
                         out += ".pdf"
+                elif action == "action_md_to_pdf":
+                    await query.edit_message_text(text=self._t(update, "action_converting_md"))
+                    res = await self.stirling_client.execute(
+                        self.md_tool, file_content=content, filename=fname
+                    )
+                    out = fname.rsplit(".", 1)[0] + ".pdf"
                 elif action == "action_to_word":
                     res = await self.stirling_client.execute(
                         self.to_word_tool, file_content=content, filename=fname
