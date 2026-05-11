@@ -2,11 +2,11 @@ from typing import Dict, Any
 
 TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "en": {
-        "start_greeting": "Hello {name}! 🤖 I am your Stirling PDF Assistant.\n\n• Send any **PDF** for quick actions.\n• Send **Photos** for /merge or conversion.\n• Send a **Link** to convert a website to PDF.\n• Type /help for the full guide.",
+        "start_greeting": "Hello {name}! 🤖 I am your Stirling PDF Assistant.\n\n• Send any **PDF** for quick actions.\n• Send **Photos** for /merge or conversion.\n• Send **Documents** (Word, PPT, MD, etc.) to convert them to PDF.\n• Send a **Link** to convert a website to PDF.\n• Type /help for the full guide.",
         "help_title": "🛠 **Stirling PDF Assistant - Feature Guide**",
         "help_usage": "📥 **How to use:**\nSend a PDF file to see the Action Menu, or use a specific command below.",
         "help_core": "✨ **Core Features:**\n• **🗜 Compress**: Reduce file size while keeping text sharp.\n• **🔍 OCR**: Make scanned PDFs searchable (Searchable PDF/A).\n• **🔒 Password**: Encrypt your PDF with a secure password.\n• **📝 To Word**: Convert your PDF into an editable `.docx` file.",
-        "help_advanced": "🔀 **Advanced Tools:**\n• **/merge**: Combine multiple PDFs and Photos.\n• **🖼 Image to PDF**: Send any photo for instant conversion.\n• **🖨 Scanner Effect**: Make digital PDFs look like scans.\n• **✂️ Split PDF**: Extract specific page ranges.\n• **🛡 Auto Redact**: Mask sensitive info automatically.\n• **🌐 URL to PDF**: Send any web link to convert it.",
+        "help_advanced": "🔀 **Advanced Tools:**\n• **/merge**: Combine multiple PDFs and Photos.\n• **🖼 Image to PDF**: Send any photo for instant conversion.\n• **📄 File to PDF**: Convert Office docs, text, and markdown files to PDF.\n• **🖨 Scanner Effect**: Make digital PDFs look like scans.\n• **✂️ Split PDF**: Extract specific page ranges.\n• **🛡 Auto Redact**: Mask sensitive info automatically.\n• **🌐 URL to PDF**: Send any web link to convert it.",
         "help_system": "⚙️ **System Limits:**\n• Max file size: {max_size}MB\n• Tasks are queued to ensure Raspberry Pi stability.",
         "help_admin": "🔑 **Admin Commands:**\n`/list_users` - Show authorized IDs\n`/add_user <ID>` - Authorize a user\n`/remove_user <ID>` - Revoke access",
         "auth_list_title": "📋 **Authorized Users:**",
@@ -20,7 +20,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "req_deny": "❌ Deny",
         "req_approved_log": "✅ User `{user_id}` approved.",
         "req_denied_log": "❌ User `{user_id}` denied.",
-        "welcome_approved": "🎉 **Your Access is Approved!**\n\nWelcome to your private **Stirling PDF Assistant**. You can now:\n• **🗜 Compress** & **🔍 OCR** documents.\n• **📚 Merge** PDFs and Photos easily.\n• **✂️ Split** & **🛡 Redact** files.\n• **🌐 Convert URLs** to PDF instantly.\n\n💡 **How to start:**\nSimply send me any **PDF**, **Photo**, or **Link**, or type **/help** for the full guide.",
+        "welcome_approved": "🎉 **Your Access is Approved!**\n\nWelcome to your private **Stirling PDF Assistant**. You can now:\n• **🗜 Compress** & **🔍 OCR** documents.\n• **📚 Merge** PDFs and Photos easily.\n• **✂️ Split** & **🛡 Redact** files.\n• **📄 Convert** Office documents and Markdown to PDF.\n• **🌐 Convert URLs** to PDF instantly.\n\n💡 **How to start:**\nSimply send me any **PDF**, **Photo**, **Document**, or **Link**, or type **/help** for the full guide.",
         "merge_start_title": "📚 **Merge Mode Active**",
         "merge_start_desc": "Send me any PDFs or Photos in the order you want them merged.\nI will automatically convert images to PDF pages.",
         "merge_btn_finish": "✅ Finish & Merge",
@@ -71,11 +71,11 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "action_converting_file": "📄 Converting document to PDF... Please wait."
     },
     "es": {
-        "start_greeting": "¡Hola {name}! 🤖 Soy tu Asistente Stirling PDF.\n\n• Envía cualquier **PDF** para acciones rápidas.\n• Envía **Fotos** para convertirlas o /merge.\n• Envía un **Link** para convertir una web a PDF.\n• Escribe /help para la guía completa.",
+        "start_greeting": "¡Hola {name}! 🤖 Soy tu Asistente Stirling PDF.\n\n• Envía cualquier **PDF** para acciones rápidas.\n• Envía **Fotos** para convertirlas o /merge.\n• Envía **Documentos** (Word, PPT, MD, etc.) para convertirlos a PDF.\n• Envía un **Link** para convertir una web a PDF.\n• Escribe /help para la guía completa.",
         "help_title": "🛠 **Asistente Stirling PDF - Guía de Funciones**",
         "help_usage": "📥 **Cómo usar:**\nEnvía un archivo PDF para ver el Menú de Acciones, o usa los comandos de abajo.",
         "help_core": "✨ **Funciones Principales:**\n• **🗜 Comprimir**: Reduce el tamaño manteniendo el texto nítido.\n• **🔍 OCR**: Haz que scans sean buscables (PDF/A).\n• **🔒 Contraseña**: Protege tu PDF con una contraseña segura.\n• **📝 A Word**: Convierte tu PDF en un archivo `.docx` editable.",
-        "help_advanced": "🔀 **Herramientas Avanzadas:**\n• **/merge**: Combina varios PDFs y Fotos.\n• **🖼 Imagen a PDF**: Envía fotos para conversión instantánea.\n• **🖨 Efecto Escáner**: Haz que PDFs digitales parezcan escaneos.\n• **✂️ Dividir PDF**: Extrae rangos de páginas específicos.\n• **🛡 Auto Reducción**: Censura información sensible.\n• **🌐 URL a PDF**: Envía un link web para convertirlo.",
+        "help_advanced": "🔀 **Herramientas Avanzadas:**\n• **/merge**: Combina varios PDFs y Fotos.\n• **🖼 Imagen a PDF**: Envía fotos para conversión instantánea.\n• **📄 Archivo a PDF**: Convierte documentos de Office, texto y markdown a PDF.\n• **🖨 Efecto Escáner**: Haz que PDFs digitales parezcan escaneos.\n• **✂️ Dividir PDF**: Extrae rangos de páginas específicos.\n• **🛡 Auto Reducción**: Censura información sensible.\n• **🌐 URL a PDF**: Envía un link web para convertirlo.",
         "help_system": "⚙️ **Límites del Sistema:**\n• Tamaño máximo: {max_size}MB\n• Las tareas se encolan para asegurar la estabilidad de la Pi.",
         "help_admin": "🔑 **Comandos de Admin:**\n`/list_users` - Ver IDs autorizados\n`/add_user <ID>` - Autorizar a un usuario\n`/remove_user <ID>` - Revocar acceso",
         "auth_list_title": "📋 **Usuarios Autorizados:**",
@@ -89,7 +89,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "req_deny": "❌ Denegar",
         "req_approved_log": "✅ Usuario `{user_id}` aprobado.",
         "req_denied_log": "❌ Usuario `{user_id}` denegado.",
-        "welcome_approved": "🎉 **¡Tu acceso ha sido aprobado!**\n\nBienvenido a tu **Asistente Stirling PDF** privado. Ahora puedes:\n• **🗜 Comprimir** y **🔍 OCR** documentos.\n• **📚 Unir** PDFs y Fotos fácilmente.\n• **✂️ Dividir** y **🛡 Redactar** archivos.\n• **🌐 Convertir URLs** a PDF al instante.\n\n💡 **Cómo empezar:**\nSimplemente envíame cualquier **PDF**, **Foto** o **Link**, o escribe **/help** para ver la guía completa.",
+        "welcome_approved": "🎉 **¡Tu acceso ha sido aprobado!**\n\nBienvenido a tu **Asistente Stirling PDF** privado. Ahora puedes:\n• **🗜 Comprimir** y **🔍 OCR** documentos.\n• **📚 Unir** PDFs y Fotos fácilmente.\n• **✂️ Dividir** y **🛡 Redactar** archivos.\n• **📄 Convertir** documentos de Office y Markdown a PDF.\n• **🌐 Convertir URLs** a PDF al instante.\n\n💡 **Cómo empezar:**\nSimplemente envíame cualquier **PDF**, **Foto**, **Documento** o **Link**, o escribe **/help** para ver la guía completa.",
         "merge_start_title": "📚 **Modo Unión Activo**",
         "merge_start_desc": "Envíame los PDFs o Fotos en el orden en que quieras unirlos.\nConvertiré automáticamente las imágenes en páginas PDF.",
         "merge_btn_finish": "✅ Finalizar y Unir",
