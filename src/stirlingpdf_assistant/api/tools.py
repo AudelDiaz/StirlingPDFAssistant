@@ -540,3 +540,29 @@ class MarkdownToPDFTool(BaseTool):
         # Using mime type text/markdown, but Stirling handles it natively via endpoint
         files = [("fileInput", (filename, file_content, "text/markdown"))]
         return files, {}
+
+class FileToPDFTool(BaseTool):
+    """
+    Tool for converting generic office documents and text files to PDF.
+    Based on /api/v1/convert/file/pdf (LibreOffice)
+    """
+
+    name = "file_to_pdf"
+    description = "Converts office documents (.docx, .ppt, .xls, .txt, etc.) into a PDF document."
+    endpoint = "/api/v1/convert/file/pdf"
+
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "file_content": {"type": "string", "format": "binary"},
+            "filename": {"type": "string", "default": "document.file"},
+        },
+        "required": ["file_content"],
+    }
+
+    def prepare_payload(
+        self, file_content: bytes, filename: str = "document.file", **kwargs
+    ) -> Tuple[List[tuple], Dict[str, Any]]:
+        files = [("fileInput", (filename, file_content, "application/octet-stream"))]
+        return files, {}
+

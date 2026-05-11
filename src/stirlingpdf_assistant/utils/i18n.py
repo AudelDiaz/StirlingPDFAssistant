@@ -65,7 +65,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "admin_limit_invalid": "❌ Invalid input. Use a number.",
         "btn_md_to_pdf": "📝 Convert to PDF",
         "msg_received_md": "Markdown received: `{name}`\nConvert to PDF?",
-        "action_converting_md": "📝 Converting Markdown to PDF... Please wait."
+        "action_converting_md": "📝 Converting Markdown to PDF... Please wait.",
+        "btn_file_to_pdf": "📄 Convert to PDF",
+        "msg_received_file_convert": "Document received: `{name}`\nConvert to PDF?",
+        "action_converting_file": "📄 Converting document to PDF... Please wait."
     },
     "es": {
         "start_greeting": "¡Hola {name}! 🤖 Soy tu Asistente Stirling PDF.\n\n• Envía cualquier **PDF** para acciones rápidas.\n• Envía **Fotos** para convertirlas o /merge.\n• Envía un **Link** para convertir una web a PDF.\n• Escribe /help para la guía completa.",
@@ -131,7 +134,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "admin_limit_invalid": "❌ Entrada inválida. Usa un número.",
         "btn_md_to_pdf": "📝 Convertir a PDF",
         "msg_received_md": "Markdown recibido: `{name}`\n¿Convertir a PDF?",
-        "action_converting_md": "📝 Convirtiendo Markdown a PDF... Por favor espera."
+        "action_converting_md": "📝 Convirtiendo Markdown a PDF... Por favor espera.",
+        "btn_file_to_pdf": "📄 Convertir a PDF",
+        "msg_received_file_convert": "Documento recibido: `{name}`\n¿Convertir a PDF?",
+        "action_converting_file": "📄 Convirtiendo documento a PDF... Por favor espera."
     }
 }
 
