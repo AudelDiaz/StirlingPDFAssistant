@@ -23,6 +23,7 @@ from stirlingpdf_assistant.api.tools import (
     AutoRedactTool,
     URLToPDFTool,
     MarkdownToPDFTool,
+    FileToPDFTool,
 )
 import re
 from stirlingpdf_assistant.api.tools import (
@@ -77,6 +78,7 @@ class BotHandlers:
         self.redact_tool = AutoRedactTool()
         self.url_tool = URLToPDFTool()
         self.md_tool = MarkdownToPDFTool()
+        self.file_to_pdf_tool = FileToPDFTool()
 
     def _t(self, update: Update, key: str, **kwargs) -> str:
         """Helper to get translated text based on user language."""
@@ -366,24 +368,32 @@ class BotHandlers:
 
         is_pdf = doc.mime_type == "application/pdf"
         is_md = doc.file_name and doc.file_name.lower().endswith(".md")
+        
+        OFFICE_EXTS = ('.docx', '.doc', '.odt', '.txt', '.rtf', '.ppt', '.pptx', '.odp', '.xls', '.xlsx', '.ods')
+        is_office = doc.file_name and doc.file_name.lower().endswith(OFFICE_EXTS)
 
-        if not is_pdf and not is_md:
+        if not is_pdf and not is_md and not is_office:
             await update.message.reply_text(self._t(update, "msg_send_pdf_hint"))
             return
 
         context.chat_data["current_file_id"] = doc.file_id
-        context.chat_data["current_file_name"] = doc.file_name or ("document.md" if is_md else "document.pdf")
+        if is_office:
+            context.chat_data["current_file_name"] = doc.file_name or "document.file"
+        else:
+            context.chat_data["current_file_name"] = doc.file_name or ("document.md" if is_md else "document.pdf")
 
-        if is_md:
+        if is_md or is_office:
+            action_data = "action_md_to_pdf" if is_md else "action_file_to_pdf"
+            btn_text = self._t(update, "btn_md_to_pdf") if is_md else self._t(update, "btn_file_to_pdf")
+            msg_text = self._t(update, "msg_received_md", name=doc.file_name) if is_md else self._t(update, "msg_received_file_convert", name=doc.file_name)
+            
             keyboard = [
                 [
-                    InlineKeyboardButton(
-                        self._t(update, "btn_md_to_pdf"), callback_data="action_md_to_pdf"
-                    )
+                    InlineKeyboardButton(btn_text, callback_data=action_data)
                 ]
             ]
             await update.message.reply_text(
-                self._t(update, "msg_received_md", name=doc.file_name),
+                msg_text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
             )
@@ -524,6 +534,12 @@ class BotHandlers:
                     await query.edit_message_text(text=self._t(update, "action_converting_md"))
                     res = await self.stirling_client.execute(
                         self.md_tool, file_content=content, filename=fname
+                    )
+                    out = fname.rsplit(".", 1)[0] + ".pdf"
+                elif action == "action_file_to_pdf":
+                    await query.edit_message_text(text=self._t(update, "action_converting_file"))
+                    res = await self.stirling_client.execute(
+                        self.file_to_pdf_tool, file_content=content, filename=fname
                     )
                     out = fname.rsplit(".", 1)[0] + ".pdf"
                 elif action == "action_to_word":

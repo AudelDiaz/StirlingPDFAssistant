@@ -9,7 +9,8 @@ from stirlingpdf_assistant.api.tools import (
     SplitPDFTool,
     URLToPDFTool,
     AutoRedactTool,
-    MarkdownToPDFTool
+    MarkdownToPDFTool,
+    FileToPDFTool
 )
 
 def test_tool_schemas_are_valid():
@@ -17,7 +18,7 @@ def test_tool_schemas_are_valid():
     tools = [
         CompressPDFTool(), OCRPDFTool(), MergePDFsTool(), AddPasswordTool(),
         ScannerEffectTool(), SplitPDFTool(), URLToPDFTool(), AutoRedactTool(),
-        MarkdownToPDFTool()
+        MarkdownToPDFTool(), FileToPDFTool()
     ]
     for tool in tools:
         schema = tool.input_schema
@@ -100,3 +101,15 @@ def test_markdown_payload():
     assert files[0][1][1] == content
     assert files[0][1][2] == "text/markdown"
     assert len(data) == 0
+
+def test_file_to_pdf_payload():
+    tool = FileToPDFTool()
+    content = b"fake doc"
+    files, data = tool.prepare_payload(file_content=content, filename="test.docx")
+    
+    assert files[0][0] == "fileInput"
+    assert files[0][1][0] == "test.docx"
+    assert files[0][1][1] == content
+    assert files[0][1][2] == "application/octet-stream"
+    assert len(data) == 0
+
