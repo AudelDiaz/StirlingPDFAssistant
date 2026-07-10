@@ -44,6 +44,10 @@ from stirlingpdf_assistant.utils.i18n import get_text
 
 logger = logging.getLogger(__name__)
 
+# Telegram Bot API enforces a 20 MB limit for file downloads via getFile.
+# While uploads can be up to 50 MB, downloads are capped at 20 MB.
+TELEGRAM_FILE_DOWNLOAD_LIMIT_MB = 20
+
 
 class BotHandlers:
     def __init__(
@@ -59,9 +63,19 @@ class BotHandlers:
         self.owner_id = owner_id
 
         # Load persistent setting or fallback to provided value (from .env)
-        self.max_file_size_mb = self.user_manager.get_setting(
+        configured_limit = self.user_manager.get_setting(
             "max_file_size_mb", max_file_size_mb
         )
+        # Telegram cannot serve files larger than 20 MB for download.
+        self.max_file_size_mb = min(configured_limit, TELEGRAM_FILE_DOWNLOAD_LIMIT_MB)
+        if configured_limit > TELEGRAM_FILE_DOWNLOAD_LIMIT_MB:
+            logger.warning(
+                "MAX_FILE_SIZE_MB=%s exceeds Telegram's %s MB download limit. "
+                "Capping at %s MB.",
+                configured_limit,
+                TELEGRAM_FILE_DOWNLOAD_LIMIT_MB,
+                TELEGRAM_FILE_DOWNLOAD_LIMIT_MB,
+            )
 
         # Concurrency Safeguard
         self.semaphore = asyncio.Semaphore(max_concurrent_tasks)
