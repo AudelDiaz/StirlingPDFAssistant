@@ -37,6 +37,19 @@ def test_compress_payload():
     assert files[0][1][0] == "test.pdf"
     assert files[0][1][1] == content
     assert data["optimizeLevel"] == "2"
+    assert data["grayscale"] == "false"
+    assert data["linearize"] == "false"
+    assert data["normalize"] == "false"
+    assert data["lineArt"] == "false"
+    assert "lineArtThreshold" not in data
+
+    # With line_art enabled, extra params should appear
+    files2, data2 = tool.prepare_payload(
+        file_content=content, filename="test.pdf", line_art=True, line_art_threshold=70
+    )
+    assert data2["lineArt"] == "true"
+    assert data2["lineArtThreshold"] == "70"
+    assert data2["lineArtEdgeLevel"] == "1"
 
 def test_ocr_payload():
     tool = OCRPDFTool()

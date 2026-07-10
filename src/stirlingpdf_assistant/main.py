@@ -78,14 +78,15 @@ def main():
     
     # Load Safeguards
     max_tasks = int(os.getenv("MAX_CONCURRENT_TASKS", "2"))
-    max_size_mb = int(os.getenv("MAX_FILE_SIZE_MB", "20"))
+    max_size_mb = int(os.getenv("MAX_FILE_SIZE_MB", "50"))
+    api_timeout = int(os.getenv("API_TIMEOUT", "180"))
 
     if not token:
         logger.error("TELEGRAM_BOT_TOKEN not found in environment.")
         return
 
     # Initialize components
-    stirling_client = StirlingPDFClient(stirling_url, stirling_key)
+    stirling_client = StirlingPDFClient(stirling_url, stirling_key, timeout=api_timeout)
     user_manager = UserManager(users_file, owner_id)
     
     # Initialize handlers

@@ -33,8 +33,41 @@ class CompressPDFTool(BaseTool):
             },
             "expected_output_size": {
                 "type": "string",
-                "default": "25KB",
-                "description": "Target output size (optional).",
+                "default": "",
+                "description": "Target output size (e.g. '25MB', '10.8MB', '25KB').",
+            },
+            "grayscale": {
+                "type": "boolean",
+                "default": False,
+                "description": "Convert all images to grayscale for smaller size.",
+            },
+            "linearize": {
+                "type": "boolean",
+                "default": False,
+                "description": "Linearize PDF for fast web viewing.",
+            },
+            "normalize": {
+                "type": "boolean",
+                "default": False,
+                "description": "Normalize internal PDF structure for better compatibility.",
+            },
+            "line_art": {
+                "type": "boolean",
+                "default": False,
+                "description": "Convert images to high-contrast line art.",
+            },
+            "line_art_threshold": {
+                "type": "integer",
+                "default": 55,
+                "minimum": 0,
+                "maximum": 100,
+                "description": "Sensitivity for line art conversion (0-100). Only used when line_art is true.",
+            },
+            "line_art_edge_level": {
+                "type": "integer",
+                "default": 1,
+                "enum": [1, 2, 3],
+                "description": "Edge detection strength for line art (1=light, 3=strong). Only used when line_art is true.",
             },
         },
         "required": ["file_content"],
@@ -46,12 +79,25 @@ class CompressPDFTool(BaseTool):
         filename: str = "document.pdf",
         optimize_level: int = 1,
         expected_output_size: str = "",
+        grayscale: bool = False,
+        linearize: bool = False,
+        normalize: bool = False,
+        line_art: bool = False,
+        line_art_threshold: int = 55,
+        line_art_edge_level: int = 1,
     ) -> Tuple[List[tuple], Dict[str, Any]]:
         files = [("fileInput", (filename, file_content, "application/pdf"))]
         data = {
             "optimizeLevel": str(optimize_level),
             "expectedOutputSize": expected_output_size,
+            "grayscale": str(grayscale).lower(),
+            "linearize": str(linearize).lower(),
+            "normalize": str(normalize).lower(),
+            "lineArt": str(line_art).lower(),
         }
+        if line_art:
+            data["lineArtThreshold"] = str(line_art_threshold)
+            data["lineArtEdgeLevel"] = str(line_art_edge_level)
         return files, data
 
 

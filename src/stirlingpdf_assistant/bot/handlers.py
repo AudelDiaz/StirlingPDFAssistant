@@ -52,7 +52,7 @@ class BotHandlers:
         user_manager: UserManager,
         owner_id: int,
         max_concurrent_tasks: int = 2,
-        max_file_size_mb: int = 20,
+        max_file_size_mb: int = 50,
     ):
         self.stirling_client = stirling_client
         self.user_manager = user_manager
