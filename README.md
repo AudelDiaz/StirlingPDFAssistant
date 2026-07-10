@@ -92,6 +92,16 @@ docker-compose up -d --build
 ## 🐋 Docker & Raspberry Pi Optimization
 The included `Dockerfile` uses a multi-stage build and a non-root user for maximum security and reduced image size, making it ideal for 64-bit ARM boards (Pi 4/5).
 
+### 📥 Handling Large Files (Local Telegram Bot API Server)
+
+Telegram's cloud Bot API limits file downloads to **20 MB**. To process larger files (up to 2 GB), run a **local Telegram Bot API server** alongside the bot:
+
+1. Get your `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` from [my.telegram.org](https://my.telegram.org).
+2. Uncomment the `telegram-bot-api` service in `docker-compose.yml`.
+3. Add `TELEGRAM_BOT_API_URL=http://telegram-bot-api:8081` to your `.env`.
+
+The local server removes all download size restrictions and can handle files up to 2 GB. See [Telegram's official docs](https://core.telegram.org/bots/api#using-a-local-bot-api-server) for details.
+
 ## 🧪 Testing & Validation
 
 ```bash

@@ -98,8 +98,16 @@ def main():
         max_file_size_mb=max_size_mb
     )
 
-    # Build application
-    application = ApplicationBuilder().token(token).post_init(post_init).build()
+    # Build application — optionally use a local Telegram Bot API server
+    # to bypass the 20 MB file download limit.
+    # See: https://core.telegram.org/bots/api#using-a-local-bot-api-server
+    builder = ApplicationBuilder().token(token).post_init(post_init)
+    bot_api_url = os.getenv("TELEGRAM_BOT_API_URL", "")
+    if bot_api_url:
+        bot_api_url = bot_api_url.rstrip("/") + "/"
+        logger.info("Using local Telegram Bot API server at %s", bot_api_url)
+        builder = builder.base_url(bot_api_url)
+    application = builder.build()
 
     # --- Register Handlers ---
 

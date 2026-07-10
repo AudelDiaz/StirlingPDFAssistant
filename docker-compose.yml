@@ -1,10 +1,27 @@
 services:
+  # Local Telegram Bot API server — removes the 20 MB file download limit.
+  # See https://core.telegram.org/bots/api#using-a-local-bot-api-server
+  telegram-bot-api:
+    image: aiogram/telegram-bot-api:latest
+    container_name: telegram-bot-api
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - telegram-bot-api-data:/var/lib/telegram-bot-api
+    # No ports exposed — access is internal via Docker DNS (telegram-bot-api:8081)
+
   stirlingpdfassistant:
     build: .
     container_name: stirlingpdfassistant
     restart: unless-stopped
+    depends_on:
+      telegram-bot-api:
     volumes:
       - ./users.json:/app/users.json
+      - telegram-bot-api-data:/var/lib/telegram-bot-api:ro
     environment:
       - PYTHONUNBUFFERED=1
     env_file: .env
+
+volumes:
+  telegram-bot-api-data:

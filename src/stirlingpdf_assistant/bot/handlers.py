@@ -44,10 +44,6 @@ from stirlingpdf_assistant.utils.i18n import get_text
 
 logger = logging.getLogger(__name__)
 
-# Telegram Bot API enforces a 20 MB limit for file downloads via getFile.
-# While uploads can be up to 50 MB, downloads are capped at 20 MB.
-TELEGRAM_FILE_DOWNLOAD_LIMIT_MB = 20
-
 
 class BotHandlers:
     def __init__(
@@ -63,19 +59,9 @@ class BotHandlers:
         self.owner_id = owner_id
 
         # Load persistent setting or fallback to provided value (from .env)
-        configured_limit = self.user_manager.get_setting(
+        self.max_file_size_mb = self.user_manager.get_setting(
             "max_file_size_mb", max_file_size_mb
         )
-        # Telegram cannot serve files larger than 20 MB for download.
-        self.max_file_size_mb = min(configured_limit, TELEGRAM_FILE_DOWNLOAD_LIMIT_MB)
-        if configured_limit > TELEGRAM_FILE_DOWNLOAD_LIMIT_MB:
-            logger.warning(
-                "MAX_FILE_SIZE_MB=%s exceeds Telegram's %s MB download limit. "
-                "Capping at %s MB.",
-                configured_limit,
-                TELEGRAM_FILE_DOWNLOAD_LIMIT_MB,
-                TELEGRAM_FILE_DOWNLOAD_LIMIT_MB,
-            )
 
         # Concurrency Safeguard
         self.semaphore = asyncio.Semaphore(max_concurrent_tasks)
@@ -144,8 +130,8 @@ class BotHandlers:
                 await update.message.reply_text(
                     self._t(update, "auth_added", user_id=new_id)
                 )
-        except:
-            pass
+        except Exception:
+            logger.warning("Failed to add user", exc_info=True)
 
     async def remove_user_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not context.args:
@@ -156,8 +142,8 @@ class BotHandlers:
                 await update.message.reply_text(
                     self._t(update, "auth_removed", user_id=target_id)
                 )
-        except:
-            pass
+        except Exception:
+            logger.warning("Failed to remove user", exc_info=True)
 
     async def set_limit_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not context.args:
@@ -171,24 +157,12 @@ class BotHandlers:
                 await update.message.reply_text(self._t(update, "admin_limit_range"))
                 return
 
-            effective_limit = min(new_limit, TELEGRAM_FILE_DOWNLOAD_LIMIT_MB)
-            self.max_file_size_mb = effective_limit
-            self.user_manager.set_setting("max_file_size_mb", effective_limit)
-            if new_limit > TELEGRAM_FILE_DOWNLOAD_LIMIT_MB:
-                await update.message.reply_text(
-                    self._t(
-                        update,
-                        "admin_limit_capped",
-                        requested=new_limit,
-                        capped=TELEGRAM_FILE_DOWNLOAD_LIMIT_MB,
-                    ),
-                    parse_mode="Markdown",
-                )
-            else:
-                await update.message.reply_text(
-                    self._t(update, "admin_limit_success", new_limit=effective_limit),
-                    parse_mode="Markdown",
-                )
+            self.max_file_size_mb = new_limit
+            self.user_manager.set_setting("max_file_size_mb", new_limit)
+            await update.message.reply_text(
+                self._t(update, "admin_limit_success", new_limit=new_limit),
+                parse_mode="Markdown",
+            )
         except:
             await update.message.reply_text(self._t(update, "admin_limit_invalid"))
 
@@ -256,8 +230,8 @@ class BotHandlers:
                 await context.bot.send_message(
                     chat_id=target_id, text=welcome_msg, parse_mode="Markdown"
                 )
-            except:
-                pass
+            except Exception:
+                logger.warning("Failed to send welcome message to user %s", target_id)
 
     async def deny_access_callback(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE

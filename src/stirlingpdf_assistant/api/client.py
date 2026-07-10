@@ -96,8 +96,8 @@ class StirlingPDFClient:
                     error_json = response.json()
                     if "message" in error_json:
                         error_msg = f"Stirling PDF Error: {error_json['message']}"
-                except:
-                    pass
+                except Exception:
+                    logger.debug("Response body is not valid JSON, using raw text")
                 
                 logger.error(error_msg)
                 raise Exception(error_msg)

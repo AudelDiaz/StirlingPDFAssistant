@@ -7,7 +7,7 @@ from stirlingpdf_assistant.utils.user_manager import UserManager
 def test_user_manager():
     """Fixture to set up and tear down a UserManager for tests."""
     test_file = "test_users.json"
-    owner_id = 1144140918
+    owner_id = 111111111
     if os.path.exists(test_file):
         os.remove(test_file)
     
