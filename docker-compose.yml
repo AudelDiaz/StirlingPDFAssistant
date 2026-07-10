@@ -15,7 +15,7 @@ services:
     container_name: stirlingpdfassistant
     restart: unless-stopped
     depends_on:
-      telegram-bot-api:
+      - telegram-bot-api
     volumes:
       - ./users.json:/app/users.json
       - telegram-bot-api-data:/var/lib/telegram-bot-api:ro
