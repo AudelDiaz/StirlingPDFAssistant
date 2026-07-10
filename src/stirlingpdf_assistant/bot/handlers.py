@@ -356,6 +356,7 @@ class BotHandlers:
 
         if context.chat_data.get("merge_active"):
             tg_file = await context.bot.get_file(doc.file_id)
+            logger.debug("get_file returned: file_id=%s file_path=%s", tg_file.file_id, tg_file.file_path)
             content = bytes(await tg_file.download_as_bytearray())
             context.chat_data["merge_queue"].append(
                 (doc.file_name or "file.pdf", content, doc.mime_type)
@@ -505,6 +506,10 @@ class BotHandlers:
         async with self.semaphore:
             try:
                 tg_file = await context.bot.get_file(fid)
+                logger.debug("CB get_file: file_id=%s file_path=%s", tg_file.file_id, tg_file.file_path)
+                from telegram._utils.files import is_local_file
+                logger.debug("CB is_local_file(file_path)=%s, encoded_url=%s",
+                             is_local_file(tg_file.file_path), tg_file._get_encoded_url())
                 content = bytes(await tg_file.download_as_bytearray())
 
                 if action == "action_compress":
@@ -663,6 +668,10 @@ class BotHandlers:
         async with self.semaphore:
             try:
                 tg_file = await context.bot.get_file(fid)
+                logger.debug("PTI get_file: file_id=%s file_path=%s", tg_file.file_id, tg_file.file_path)
+                from telegram._utils.files import is_local_file
+                logger.debug("PTI is_local_file(file_path)=%s, encoded_url=%s",
+                             is_local_file(tg_file.file_path), tg_file._get_encoded_url())
                 content = bytes(await tg_file.download_as_bytearray())
                 res = await self.stirling_client.execute(
                     tool, file_content=content, filename=fname, **kwargs

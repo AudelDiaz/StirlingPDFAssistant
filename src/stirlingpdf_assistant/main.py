@@ -110,12 +110,16 @@ def main():
         # Match the same pattern for the local server.
         base = bot_api_url.rstrip("/")
         logger.info("Using local Telegram Bot API server at %s", base)
+        logger.info("Setting base_url=%s/bot, base_file_url=%s/file/bot", base, base)
         builder = (
             builder
             .base_url(f"{base}/bot")
             .base_file_url(f"{base}/file/bot")
         )
     application = builder.build()
+    # Log the actual URLs the bot is using
+    bot = application.bot
+    logger.info("Bot base_url=%s base_file_url=%s", bot.base_url, bot.base_file_url)
 
     # --- Register Handlers ---
 
