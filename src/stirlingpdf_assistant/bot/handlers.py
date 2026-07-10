@@ -1,8 +1,11 @@
 import logging
 import asyncio
+import os
+from pathlib import Path
 from typing import List, Dict, Tuple
 from telegram import (
     Update,
+    File,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     ReplyKeyboardMarkup,
@@ -10,6 +13,7 @@ from telegram import (
     ReplyKeyboardRemove,
 )
 from telegram.ext import ContextTypes
+from telegram._utils.files import is_local_file
 from stirlingpdf_assistant.api.client import StirlingPDFClient
 from stirlingpdf_assistant.api.tools import (
     CompressPDFTool,
@@ -43,6 +47,46 @@ from stirlingpdf_assistant.utils.user_manager import UserManager
 from stirlingpdf_assistant.utils.i18n import get_text
 
 logger = logging.getLogger(__name__)
+
+LOCAL_FILE_PREFIX = "/var/lib/telegram-bot-api/"
+
+
+async def download_file(tg_file: File) -> bytes:
+    """Download a Telegram file, preferring direct filesystem read
+    when running alongside a local Bot API server with shared volume."""
+    file_path = tg_file.file_path
+    if not file_path:
+        raise RuntimeError("No file_path available")
+
+    # 1. Direct filesystem read via shared volume (--local Bot API server)
+    if file_path.startswith(LOCAL_FILE_PREFIX):
+        logger.info("Downloading from shared volume: %s", file_path)
+        try:
+            return Path(file_path).read_bytes()
+        except (OSError, PermissionError) as exc:
+            logger.warning("Shared volume read failed (%s), falling back to HTTP", exc)
+
+    # 2. PTB has already turned file_path into a full URL — download directly.
+    #    Clean up the double-slash that PTB creates when prepending
+    #    base_file_url to an absolute path.
+    if file_path.startswith("http://") or file_path.startswith("https://"):
+        # Fix double slashes in the path portion (e.g. .../bot<token>//var/...)
+        from urllib.parse import urlparse, urlunparse
+        parsed = urlparse(file_path)
+        clean_path = parsed.path.replace("//", "/")
+        fixed_url = urlunparse(parsed._replace(path=clean_path))
+        if fixed_url != file_path:
+            logger.info("Fixed download URL (removed double slash): %s", fixed_url)
+        else:
+            logger.info("Downloading via HTTP: %s", file_path)
+        import httpx
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(fixed_url)
+            resp.raise_for_status()
+            return resp.content
+
+    # 3. Fall back to PTB's built-in download (local file or relative path)
+    return bytes(await tg_file.download_as_bytearray())
 
 
 class BotHandlers:
@@ -356,8 +400,7 @@ class BotHandlers:
 
         if context.chat_data.get("merge_active"):
             tg_file = await context.bot.get_file(doc.file_id)
-            logger.debug("get_file returned: file_id=%s file_path=%s", tg_file.file_id, tg_file.file_path)
-            content = bytes(await tg_file.download_as_bytearray())
+            content = await download_file(tg_file)
             context.chat_data["merge_queue"].append(
                 (doc.file_name or "file.pdf", content, doc.mime_type)
             )
@@ -442,7 +485,7 @@ class BotHandlers:
 
         if context.chat_data.get("merge_active"):
             tg_file = await context.bot.get_file(photo.file_id)
-            content = bytes(await tg_file.download_as_bytearray())
+            content = await download_file(tg_file)
             context.chat_data["merge_queue"].append(
                 ("image.jpg", content, "image/jpeg")
             )
@@ -506,11 +549,7 @@ class BotHandlers:
         async with self.semaphore:
             try:
                 tg_file = await context.bot.get_file(fid)
-                logger.debug("CB get_file: file_id=%s file_path=%s", tg_file.file_id, tg_file.file_path)
-                from telegram._utils.files import is_local_file
-                logger.debug("CB is_local_file(file_path)=%s, encoded_url=%s",
-                             is_local_file(tg_file.file_path), tg_file._get_encoded_url())
-                content = bytes(await tg_file.download_as_bytearray())
+                content = await download_file(tg_file)
 
                 if action == "action_compress":
                     res = await self.stirling_client.execute(
@@ -668,11 +707,7 @@ class BotHandlers:
         async with self.semaphore:
             try:
                 tg_file = await context.bot.get_file(fid)
-                logger.debug("PTI get_file: file_id=%s file_path=%s", tg_file.file_id, tg_file.file_path)
-                from telegram._utils.files import is_local_file
-                logger.debug("PTI is_local_file(file_path)=%s, encoded_url=%s",
-                             is_local_file(tg_file.file_path), tg_file._get_encoded_url())
-                content = bytes(await tg_file.download_as_bytearray())
+                content = await download_file(tg_file)
                 res = await self.stirling_client.execute(
                     tool, file_content=content, filename=fname, **kwargs
                 )
