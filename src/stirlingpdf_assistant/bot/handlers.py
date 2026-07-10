@@ -171,12 +171,24 @@ class BotHandlers:
                 await update.message.reply_text(self._t(update, "admin_limit_range"))
                 return
 
-            self.max_file_size_mb = new_limit
-            self.user_manager.set_setting("max_file_size_mb", new_limit)
-            await update.message.reply_text(
-                self._t(update, "admin_limit_success", new_limit=new_limit),
-                parse_mode="Markdown",
-            )
+            effective_limit = min(new_limit, TELEGRAM_FILE_DOWNLOAD_LIMIT_MB)
+            self.max_file_size_mb = effective_limit
+            self.user_manager.set_setting("max_file_size_mb", effective_limit)
+            if new_limit > TELEGRAM_FILE_DOWNLOAD_LIMIT_MB:
+                await update.message.reply_text(
+                    self._t(
+                        update,
+                        "admin_limit_capped",
+                        requested=new_limit,
+                        capped=TELEGRAM_FILE_DOWNLOAD_LIMIT_MB,
+                    ),
+                    parse_mode="Markdown",
+                )
+            else:
+                await update.message.reply_text(
+                    self._t(update, "admin_limit_success", new_limit=effective_limit),
+                    parse_mode="Markdown",
+                )
         except:
             await update.message.reply_text(self._t(update, "admin_limit_invalid"))
 
