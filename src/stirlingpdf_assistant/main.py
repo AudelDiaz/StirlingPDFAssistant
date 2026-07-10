@@ -104,9 +104,17 @@ def main():
     builder = ApplicationBuilder().token(token).post_init(post_init)
     bot_api_url = os.getenv("TELEGRAM_BOT_API_URL", "")
     if bot_api_url:
-        bot_api_url = bot_api_url.rstrip("/") + "/"
-        logger.info("Using local Telegram Bot API server at %s", bot_api_url)
-        builder = builder.base_url(bot_api_url)
+        # PTB's defaults:
+        #   base_url = "https://api.telegram.org/bot"
+        #   base_file_url = "https://api.telegram.org/file/bot"
+        # Match the same pattern for the local server.
+        base = bot_api_url.rstrip("/")
+        logger.info("Using local Telegram Bot API server at %s", base)
+        builder = (
+            builder
+            .base_url(f"{base}/bot")
+            .base_file_url(f"{base}/file/bot")
+        )
     application = builder.build()
 
     # --- Register Handlers ---
