@@ -6,6 +6,8 @@ services:
     container_name: telegram-bot-api
     restart: unless-stopped
     env_file: .env
+    environment:
+      - TELEGRAM_LOCAL=true
     volumes:
       - telegram-bot-api-data:/var/lib/telegram-bot-api
     # No ports exposed — access is internal via Docker DNS (telegram-bot-api:8081)
