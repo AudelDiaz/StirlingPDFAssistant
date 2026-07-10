@@ -54,38 +54,50 @@ LOCAL_FILE_PREFIX = "/var/lib/telegram-bot-api/"
 async def download_file(tg_file: File) -> bytes:
     """Download a Telegram file, preferring direct filesystem read
     when running alongside a local Bot API server with shared volume."""
-    file_path = tg_file.file_path
-    if not file_path:
+    raw_path: str | None = tg_file.file_path
+    if not raw_path:
         raise RuntimeError("No file_path available")
 
-    # 1. Direct filesystem read via shared volume (--local Bot API server)
-    if file_path.startswith(LOCAL_FILE_PREFIX):
-        logger.info("Downloading from shared volume: %s", file_path)
-        try:
-            return Path(file_path).read_bytes()
-        except (OSError, PermissionError) as exc:
-            logger.warning("Shared volume read failed (%s), falling back to HTTP", exc)
-
-    # 2. PTB has already turned file_path into a full URL — download directly.
-    #    Clean up the double-slash that PTB creates when prepending
-    #    base_file_url to an absolute path.
-    if file_path.startswith("http://") or file_path.startswith("https://"):
-        # Fix double slashes in the path portion (e.g. .../bot<token>//var/...)
+    # === Detect full URL created by PTB's Bot.get_file ===
+    # PTB checks is_local_file() on the raw file_path from getFile.
+    # If it's False, it prepends base_file_url, turning the path into:
+    #   http://telegram-bot-api:8081/file/bot<token>//var/lib/.../file.jpg
+    # We extract the original filesystem path from this URL.
+    if raw_path.startswith("http://") or raw_path.startswith("https://"):
         from urllib.parse import urlparse, urlunparse
-        parsed = urlparse(file_path)
-        clean_path = parsed.path.replace("//", "/")
+        parsed = urlparse(raw_path)
+        path = parsed.path  # e.g. /file/bot<token>//var/lib/.../file.jpg
+
+        # Extract the LOCAL_FILE_PREFIX segment if present
+        local_idx = path.find(LOCAL_FILE_PREFIX)
+        if local_idx >= 0:
+            local_path = path[local_idx:]
+            logger.info("Extracted local path from URL: %s", local_path)
+            try:
+                return Path(local_path).read_bytes()
+            except (OSError, PermissionError) as exc:
+                logger.warning("Shared volume read failed (%s)", exc)
+
+        # Otherwise, fix double slashes and download via HTTP
+        clean_path = path.replace("//", "/")
         fixed_url = urlunparse(parsed._replace(path=clean_path))
-        if fixed_url != file_path:
-            logger.info("Fixed download URL (removed double slash): %s", fixed_url)
-        else:
-            logger.info("Downloading via HTTP: %s", file_path)
+        logger.info("Downloading via HTTP: %s", fixed_url)
         import httpx
         async with httpx.AsyncClient() as client:
             resp = await client.get(fixed_url)
             resp.raise_for_status()
             return resp.content
 
-    # 3. Fall back to PTB's built-in download (local file or relative path)
+    # === Direct filesystem path (PTB did NOT modify it) ===
+    if raw_path.startswith(LOCAL_FILE_PREFIX):
+        logger.info("Downloading from shared volume: %s", raw_path)
+        try:
+            return Path(raw_path).read_bytes()
+        except (OSError, PermissionError) as exc:
+            logger.warning("Shared volume read failed (%s)", exc)
+
+    # === Fall back to PTB's built-in download ===
+    logger.info("Falling back to PTB download for: %s", raw_path)
     return bytes(await tg_file.download_as_bytearray())
 
 
