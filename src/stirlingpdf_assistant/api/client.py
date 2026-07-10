@@ -12,14 +12,17 @@ class StirlingPDFClient:
     Designed as a low-level transport for modular Tools.
     """
 
-    def __init__(self, base_url: str, api_key: Optional[str] = None, timeout: float = 60.0):
+    def __init__(self, base_url: str, api_key: Optional[str] = None, timeout: float = 180.0):
         """
         Initialize the client.
         
         Args:
             base_url (str): The base URL of your Stirling PDF instance (e.g., http://localhost:8080 or http://host/pdf-editor/).
             api_key (str): Optional API Key (X-API-Key).
-            timeout (float): Request timeout in seconds.
+            timeout (float): Read timeout in seconds (default 180s). The httpx client
+                             also applies pool=30s, connect=30s, write=60s for a
+                             potential total of pool+connect+read+write. Raised to 180s
+                             for slow LibreOffice conversions on Raspberry Pi.
         """
         # Ensure base_url ends with a slash for reliable urljoin with relative paths
         self.base_url = base_url if base_url.endswith("/") else f"{base_url}/"
@@ -67,7 +70,14 @@ class StirlingPDFClient:
                 else:
                     multipart_parts.append((key, (None, str(value))))
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(
+                pool=30.0,
+                connect=30.0,
+                read=self.timeout,
+                write=60.0,
+            )
+        ) as client:
             try:
                 response = await client.post(
                     url,

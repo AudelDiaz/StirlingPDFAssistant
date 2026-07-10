@@ -46,6 +46,9 @@ stirlingpdf-assistant/
 │       ├── utils/      # I18n, user management, and common utilities
 │       └── main.py     # Application entry point
 ├── tests/              # Test suite for API and logic
+├── .env.example        # Environment variable template
+├── AGENTS.md           # Developer onboarding and quirks
+├── docker-compose.yml  # Docker Compose orchestration
 ├── Dockerfile          # Multi-stage Docker build
 └── pyproject.toml      # Project dependencies and metadata
 ```
@@ -53,7 +56,7 @@ stirlingpdf-assistant/
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
-- Python 3.10+
+- Python 3.14+
 - [uv](https://github.com/astral-sh/uv) (Recommended) or `pip`
 - A running Stirling PDF instance with API enabled.
 
@@ -67,6 +70,10 @@ Key variables:
 - `STIRLING_PDF_URL`: Your Stirling PDF endpoint.
 - `STIRLING_PDF_API_KEY`: Your Stirling API Key.
 - `BOT_OWNER_ID`: Your Telegram User ID.
+- `API_TIMEOUT`: Request timeout in seconds (default: 180). Increase for slow LibreOffice conversions on Raspberry Pi.
+- `MAX_FILE_SIZE_MB`: Max upload size in MB (default: 50).
+- `MAX_CONCURRENT_TASKS`: Limit concurrent PDF operations (default: 2).
+- `USERS_FILE`: Path to the users JSON file (default: `users.json`).
 
 ### 3. Installation & Run
 Using `uv`:
@@ -86,9 +93,14 @@ docker-compose up -d --build
 The included `Dockerfile` uses a multi-stage build and a non-root user for maximum security and reduced image size, making it ideal for 64-bit ARM boards (Pi 4/5).
 
 ## 🧪 Testing & Validation
-A live validation suite is included to ensure your Stirling PDF API is compatible:
+
 ```bash
-python scripts/api_validate.py
+# Unit tests (no external dependencies)
+pytest
+
+# Integration tests — validate compatibility with your Stirling PDF instance
+# Requires STIRLING_PDF_URL and STIRLING_PDF_API_KEY to be set
+pytest tests/test_integration_api.py -v
 ```
 
 ## 📜 License
