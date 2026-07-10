@@ -13,7 +13,7 @@ services:
     # No ports exposed — access is internal via Docker DNS (telegram-bot-api:8081)
 
   stirlingpdfassistant:
-    image: ghcr.io/audeldiaz/stirlingpdfassistant:master
+    build: .
     container_name: stirlingpdfassistant
     restart: unless-stopped
     depends_on:
