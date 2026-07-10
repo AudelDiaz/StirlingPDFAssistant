@@ -19,7 +19,9 @@ class StirlingPDFClient:
         Args:
             base_url (str): The base URL of your Stirling PDF instance (e.g., http://localhost:8080 or http://host/pdf-editor/).
             api_key (str): Optional API Key (X-API-Key).
-            timeout (float): Max total request time in seconds. Increased to 180s
+            timeout (float): Read timeout in seconds (default 180s). The httpx client
+                             also applies pool=30s, connect=30s, write=60s for a
+                             potential total of pool+connect+read+write. Raised to 180s
                              for slow LibreOffice conversions on Raspberry Pi.
         """
         # Ensure base_url ends with a slash for reliable urljoin with relative paths
