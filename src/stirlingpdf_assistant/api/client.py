@@ -1,6 +1,6 @@
 import logging
 import httpx
-from typing import Optional, Any, Dict, List, Tuple
+from typing import Optional
 from urllib.parse import urljoin
 from stirlingpdf_assistant.api.tools import BaseTool
 
