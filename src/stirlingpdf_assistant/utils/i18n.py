@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict
 
 TRANSLATIONS: Dict[str, Dict[str, str]] = {
     "en": {

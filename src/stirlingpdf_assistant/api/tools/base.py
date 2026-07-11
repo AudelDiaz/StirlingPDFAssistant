@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 
 class BaseTool(abc.ABC):
@@ -12,25 +12,21 @@ class BaseTool(abc.ABC):
     @abc.abstractmethod
     def name(self) -> str:
         """The machine-readable name of the tool."""
-        pass
 
     @property
     @abc.abstractmethod
     def description(self) -> str:
         """A detailed description of what the tool does."""
-        pass
 
     @property
     @abc.abstractmethod
     def endpoint(self) -> str:
         """The API endpoint for this tool."""
-        pass
 
     @property
     @abc.abstractmethod
     def input_schema(self) -> Dict[str, Any]:
         """JSON Schema defining the tool's input parameters."""
-        pass
 
     @abc.abstractmethod
     def prepare_payload(self, **kwargs) -> Tuple[List[tuple], Dict[str, Any]]:
@@ -40,4 +36,3 @@ class BaseTool(abc.ABC):
         Returns:
             Tuple[List[tuple], Dict[str, Any]]: (files, form_data)
         """
-        pass

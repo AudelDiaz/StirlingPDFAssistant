@@ -1,6 +1,5 @@
 import os
 import logging
-import asyncio
 from dotenv import load_dotenv
 from telegram import Update, BotCommand, BotCommandScopeChat
 from telegram.ext import (
@@ -15,7 +14,6 @@ from stirlingpdf_assistant.api.client import StirlingPDFClient
 from stirlingpdf_assistant.utils.user_manager import UserManager
 from stirlingpdf_assistant.bot.handlers import BotHandlers
 from stirlingpdf_assistant.bot.decorators import restricted, owner_only
-from stirlingpdf_assistant.utils.i18n import TRANSLATIONS
 
 # Load environment variables
 load_dotenv()

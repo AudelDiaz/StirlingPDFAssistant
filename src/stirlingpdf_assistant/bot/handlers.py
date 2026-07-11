@@ -1,8 +1,7 @@
 import logging
 import asyncio
-import os
+import re
 from pathlib import Path
-from typing import List, Dict, Tuple
 from telegram import (
     Update,
     File,
@@ -13,7 +12,6 @@ from telegram import (
     ReplyKeyboardRemove,
 )
 from telegram.ext import ContextTypes
-from telegram._utils.files import is_local_file
 from stirlingpdf_assistant.api.client import StirlingPDFClient
 from stirlingpdf_assistant.api.tools import (
     CompressPDFTool,
@@ -29,20 +27,6 @@ from stirlingpdf_assistant.api.tools import (
     MarkdownToPDFTool,
     FileToPDFTool,
 )
-import re
-from stirlingpdf_assistant.api.tools import (
-    CompressPDFTool,
-    OCRPDFTool,
-    AddPasswordTool,
-    MergePDFsTool,
-    ImagesToPDFTool,
-    PdfToWordTool,
-    ScannerEffectTool,
-    SplitPDFTool,
-    AutoRedactTool,
-    URLToPDFTool,
-)
-import re
 from stirlingpdf_assistant.utils.user_manager import UserManager
 from stirlingpdf_assistant.utils.i18n import get_text
 

@@ -8,12 +8,14 @@ The user already hosts a Stirling PDF server locally and wants to allow files up
 
 ## Requirements
 
-- [ ] REQ-1: Add a `TELEGRAM_BOT_API_URL` environment variable so users can point the bot at a local Telegram Bot API server
-- [ ] REQ-2: When `TELEGRAM_BOT_API_URL` is set, pass it to `ApplicationBuilder.base_url()` so all Telegram API calls (including file downloads) go through the local server
-- [ ] REQ-3: When `TELEGRAM_BOT_API_URL` is **not** set, keep the default behavior (use `https://api.telegram.org`) — zero-config backward compatibility
-- [ ] REQ-4: Add an optional `telegram-bot-api` service to `docker-compose.yml` so users can deploy everything with one `docker compose up`
-- [ ] REQ-5: Update `.env.example` with the new variable and clear documentation
-- [ ] REQ-6: Ensure the `send_document` upload path also uses the custom base URL (it already will, since it uses the same `context.bot`)
+- [x] REQ-1: Add a `TELEGRAM_BOT_API_URL` environment variable so users can point the bot at a local Telegram Bot API server
+- [x] REQ-2: When `TELEGRAM_BOT_API_URL` is set, pass it to `ApplicationBuilder.base_url()` so all Telegram API calls (including file downloads) go through the local server
+- [x] REQ-3: When `TELEGRAM_BOT_API_URL` is **not** set, keep the default behavior (use `https://api.telegram.org`) — zero-config backward compatibility
+- [x] REQ-4: Add a `telegram-bot-api` service to `docker-compose.yml` so users can deploy everything with one `docker compose up` (now enabled by default)
+- [x] REQ-5: Update `.env.example` with the new variable and clear documentation
+- [x] REQ-6: Ensure the `send_document` upload path also uses the custom base URL (it already will, since it uses the same `context.bot`)
+- [x] REQ-7: Fix UID mismatch between the default Bot API image (UID 101) and the bot container (UID 1000) — solved via a custom `docker/telegram-bot-api/Dockerfile` that patches `/etc/passwd` and `/etc/group`
+- [x] REQ-8: Build and publish a multi-arch custom Bot API image to GHCR for RPi deployment with `docker compose pull`
 
 ## Architecture
 
@@ -103,33 +105,54 @@ else:
     application = ApplicationBuilder().token(token).post_init(post_init).build()
 ```
 
-### docker-compose.yml addition
+### docker-compose.yml (current state)
 
 ```yaml
 services:
   telegram-bot-api:
-    image: aiogram/telegram-bot-api:latest
+    build: ./docker/telegram-bot-api
+    image: ghcr.io/audeldiaz/StirlingPDFAssistant/telegram-bot-api:master
     container_name: telegram-bot-api
     restart: unless-stopped
+    env_file: .env
     environment:
-      TELEGRAM_API_ID: "${TELEGRAM_API_ID}"
-      TELEGRAM_API_HASH: "${TELEGRAM_API_HASH}"
-      # Optional: increase max file size from default
-      # MAX_FILE_SIZE: 52428800  # 50 MB
+      - TELEGRAM_LOCAL=true
     volumes:
       - telegram-bot-api-data:/var/lib/telegram-bot-api
-    ports:
-      - "8081:8081"
+    # No ports exposed — access is internal via Docker DNS (telegram-bot-api:8081)
 
   stirlingpdfassistant:
-    # ... existing config, plus:
-    environment:
-      - TELEGRAM_BOT_API_URL=http://telegram-bot-api:8081
+    build: .
+    image: ghcr.io/audeldiaz/StirlingPDFAssistant:master
+    container_name: stirlingpdfassistant
+    restart: unless-stopped
     depends_on:
       - telegram-bot-api
+    volumes:
+      - ./users.json:/app/users.json
+      - telegram-bot-api-data:/var/lib/telegram-bot-api:ro
 
 volumes:
   telegram-bot-api-data:
+```
+
+Key differences from the original spec:
+- Uses a custom `Dockerfile` instead of `aiogram/telegram-bot-api:latest` — needed to match UID 1000 for shared volume access.
+- Both `build` and `image` are specified for dual dev/prod workflow: `docker compose up --build` for local dev, `docker compose pull && docker compose up` for RPi deployment (pulls pre-built multi-arch from GHCR).
+- No ports exposed on the Bot API server — communication is via Docker's internal DNS.
+- `telegram-bot-api` service is enabled by default (not optional) since it's required for >20 MB file support.
+- Shared volume `telegram-bot-api-data` is mounted read-only (`:ro`) in the bot container.
+
+### Custom UID Dockerfile
+
+The default `aiogram/telegram-bot-api` image runs as UID 101, but the bot container uses UID 1000. Files created by the Bot API server on the shared volume are owned by 101, causing "Permission denied" errors when the bot tries to read them.
+
+The custom `docker/telegram-bot-api/Dockerfile` patches the UID/GID:
+
+```dockerfile
+RUN sed -i 's/^telegram-bot-api:[^:]*:[^:]*:[^:]*/telegram-bot-api:x:1000:1000/' /etc/passwd \
+ && sed -i 's/^telegram-bot-api:x:101:/telegram-bot-api:x:1000:/' /etc/group \
+ && chown -R 1000:1000 /var/lib/telegram-bot-api
 ```
 
 ## Testing Strategy

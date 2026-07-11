@@ -1,4 +1,3 @@
-import pytest
 import json
 from stirlingpdf_assistant.api.tools import (
     CompressPDFTool, 
