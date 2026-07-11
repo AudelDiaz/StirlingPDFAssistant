@@ -38,13 +38,18 @@ Currently, the following tools are implemented:
 
 | Tool Class | Stirling Endpoint | Purpose |
 | :--- | :--- | :--- |
-| `CompressPDFTool` | `/api/v1/misc/compress-pdf` | Reduce file size. |
+| `CompressPDFTool` | `/api/v1/misc/compress-pdf` | Reduce file size (supports target size, grayscale, linearize). |
 | `OCRPDFTool` | `/api/v1/misc/ocr-pdf` | Make PDFs searchable. |
 | `MergePDFsTool` | `/api/v1/general/merge-pdfs` | Combine multiple PDFs. |
+| `SplitPDFTool` | `/api/v1/general/split-pages` | Extract specific page ranges. |
+| `ScannerEffectTool` | `/api/v1/misc/scanner-effect` | Apply "scanned" look to digital docs. |
 | `AddPasswordTool` | `/api/v1/security/add-password` | Encrypt PDF with a password. |
+| `AutoRedactTool` | `/api/v1/security/auto-redact` | Mask sensitive keywords automatically. |
 | `ImagesToPDFTool` | `/api/v1/convert/img/pdf` | Convert images to PDF. |
 | `PdfToWordTool` | `/api/v1/convert/pdf/word` | Convert PDF to .docx. |
-| `ScannerEffectTool` | `/api/v1/misc/scanner-effect` | Apply "scanned" look. |
+| `URLToPDFTool` | `/api/v1/convert/url/pdf` | Convert a web URL to PDF. |
+| `MarkdownToPDFTool` | `/api/v1/convert/markdown/pdf` | Convert Markdown text to PDF. |
+| `FileToPDFTool` | `/api/v1/convert/file/pdf` | Convert Office docs (Word, PPT, text) to PDF. |
 
 ## Client Execution
 

@@ -30,9 +30,7 @@ Detailed documentation is available in the `docs/` folder:
 
 - **[Architecture](docs/architecture.md)**: High-level overview of the system components and data flow.
 - **[API Integration](docs/api_integration.md)**: Details on how the bot communicates with Stirling PDF and the "Tool" pattern.
-- **[Bot Commands & Features](docs/commands.md)**: A comprehensive guide to all available commands and PDF operations.
 - **[User Management](docs/user_management.md)**: Explains the security model, whitelisting, and owner approval workflow.
-- **[Technical Summary](docs/technical_summary.md)**: A deep dive into the technologies, security, and future roadmap.
 
 ## 📂 Project Structure
 
@@ -42,7 +40,9 @@ stirlingpdf-assistant/
 │   ├── bot/                    # Multi-stage Docker build
 │   └── telegram-bot-api/      # Custom local Bot API server (UID 1000)
 ├── docs/                      # Detailed documentation
-│   └── plan.md                # Original project plan
+│   ├── architecture.md
+│   ├── api_integration.md
+│   └── user_management.md
 ├── src/
 │   └── stirlingpdf_assistant/
 │       ├── api/        # Stirling PDF API client and Tool definitions
