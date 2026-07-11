@@ -18,4 +18,4 @@ tests/
 api-docs.json
 
 # Exclude project docs
-stirlingpdf-assistant-plan.md
+docs/plan.md

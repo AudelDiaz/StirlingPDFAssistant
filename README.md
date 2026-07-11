@@ -39,8 +39,10 @@ Detailed documentation is available in the `docs/` folder:
 ```text
 stirlingpdf-assistant/
 ├── docker/
+│   ├── bot/                    # Multi-stage Docker build
 │   └── telegram-bot-api/      # Custom local Bot API server (UID 1000)
 ├── docs/                      # Detailed documentation
+│   └── plan.md                # Original project plan
 ├── src/
 │   └── stirlingpdf_assistant/
 │       ├── api/        # Stirling PDF API client and Tool definitions
@@ -51,7 +53,6 @@ stirlingpdf-assistant/
 ├── .env.example        # Environment variable template
 ├── AGENTS.md           # Developer onboarding and quirks
 ├── docker-compose.yml  # Docker Compose orchestration
-├── Dockerfile          # Multi-stage Docker build
 └── pyproject.toml      # Project dependencies and metadata
 ```
 
@@ -86,9 +87,12 @@ uv sync
 python -m stirlingpdf_assistant.main
 ```
 
-Using Docker (development — build locally):
+Using Docker (development — build and run locally):
 ```bash
-docker compose up -d --build
+docker build -t ghcr.io/audeldiaz/StirlingPDFAssistant:master -f docker/bot/Dockerfile .
+# Build the telegram-bot-api image if you need local changes:
+docker build -t ghcr.io/audeldiaz/StirlingPDFAssistant/telegram-bot-api:master -f docker/telegram-bot-api/Dockerfile .
+docker compose up -d
 ```
 
 Using Docker (Raspberry Pi — pull pre-built from GHCR):
@@ -97,7 +101,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Both images are built with multi-arch support (linux/amd64, linux/arm64) via GitHub Actions and published to `ghcr.io`.
+Both images are built with multi-arch support (linux/amd64, linux/arm64) via a GitHub Actions matrix job and published to `ghcr.io`.
 
 ## 🐋 Docker & Raspberry Pi Optimization
 

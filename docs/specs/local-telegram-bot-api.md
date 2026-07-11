@@ -110,7 +110,6 @@ else:
 ```yaml
 services:
   telegram-bot-api:
-    build: ./docker/telegram-bot-api
     image: ghcr.io/audeldiaz/StirlingPDFAssistant/telegram-bot-api:master
     container_name: telegram-bot-api
     restart: unless-stopped
@@ -122,7 +121,6 @@ services:
     # No ports exposed — access is internal via Docker DNS (telegram-bot-api:8081)
 
   stirlingpdfassistant:
-    build: .
     image: ghcr.io/audeldiaz/StirlingPDFAssistant:master
     container_name: stirlingpdfassistant
     restart: unless-stopped
@@ -137,8 +135,8 @@ volumes:
 ```
 
 Key differences from the original spec:
-- Uses a custom `Dockerfile` instead of `aiogram/telegram-bot-api:latest` — needed to match UID 1000 for shared volume access.
-- Both `build` and `image` are specified for dual dev/prod workflow: `docker compose up --build` for local dev, `docker compose pull && docker compose up` for RPi deployment (pulls pre-built multi-arch from GHCR).
+- Uses a custom image (`ghcr.io/.../telegram-bot-api:master`) instead of `aiogram/telegram-bot-api:latest` — needed to match UID 1000 for shared volume access.
+- No `build:` keys — images are pulled pre-built from GHCR (built by CI matrix job).
 - No ports exposed on the Bot API server — communication is via Docker's internal DNS.
 - `telegram-bot-api` service is enabled by default (not optional) since it's required for >20 MB file support.
 - Shared volume `telegram-bot-api-data` is mounted read-only (`:ro`) in the bot container.
