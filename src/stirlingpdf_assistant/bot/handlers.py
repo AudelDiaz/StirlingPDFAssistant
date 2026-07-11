@@ -541,18 +541,18 @@ class BotHandlers:
             await query.edit_message_text(self._t(update, "prompt_redact_text"))
             return
 
+        if action == "action_compress":
+            context.chat_data["awaiting_compress_target"] = True
+            await query.edit_message_text(self._t(update, "action_compress_prompt"))
+            return
+
         await query.edit_message_text(text=self._t(update, "action_processing"))
         async with self.semaphore:
             try:
                 tg_file = await context.bot.get_file(fid)
                 content = await download_file(tg_file)
 
-                if action == "action_compress":
-                    res = await self.stirling_client.execute(
-                        self.compress_tool, file_content=content, filename=fname
-                    )
-                    out = f"compressed_{fname}"
-                elif action == "action_ocr":
+                if action == "action_ocr":
                     res = await self.stirling_client.execute(
                         self.ocr_tool, file_content=content, filename=fname
                     )
@@ -627,6 +627,7 @@ class BotHandlers:
                 chat_data.get("awaiting_password"),
                 chat_data.get("awaiting_split"),
                 chat_data.get("awaiting_redact"),
+                chat_data.get("awaiting_compress_target"),
             ]
         ):
             url = url_match.group(1)
@@ -677,6 +678,63 @@ class BotHandlers:
                 "redacted_",
                 keywords=text,
             )
+        elif chat_data.get("awaiting_compress_target"):
+            raw = text.strip()
+            if not raw:
+                await update.message.reply_text(self._t(update, "action_compress_prompt"))
+                return
+
+            lower = raw.lower()
+            # Treat "skip", "default", "-", "0", or a bare number as "no target"
+            if lower in ("skip", "default", "-", "0") or raw.isdigit():
+                expected_size = ""
+            elif any(c.isdigit() for c in raw):
+                # Has a digit — treat as target size, append "MB" if no unit
+                expected_size = raw if raw.upper().endswith(("KB", "MB", "GB")) else f"{raw}MB"
+            else:
+                # Unexpected — keep state, ask again
+                await update.message.reply_text(self._t(update, "err_compress_invalid"))
+                return
+
+            context.chat_data["awaiting_compress_target"] = False
+            fid = context.chat_data.get("current_file_id")
+            fname = context.chat_data.get("current_file_name")
+
+            if not fid:
+                await update.message.reply_text(self._t(update, "err_session_expired"))
+                return
+
+            status = await update.message.reply_text(self._t(update, "action_processing"))
+            await status.edit_text(self._t(update, "action_compressing"))
+
+            async with self.semaphore:
+                try:
+                    tg_file = await context.bot.get_file(fid)
+                    content = await download_file(tg_file)
+                    res = await self.stirling_client.execute(
+                        self.compress_tool,
+                        file_content=content,
+                        filename=fname,
+                        expected_output_size=expected_size,
+                        grayscale=True,
+                        linearize=True,
+                    )
+                    await status.edit_text(self._t(update, "action_complete"))
+                    await context.bot.send_document(
+                        chat_id=update.effective_chat.id,
+                        document=res,
+                        filename=f"compressed_{fname}",
+                    )
+                except Exception as exc:
+                    logger.warning("Compress failed, re-prompting: %s", exc)
+                    await status.edit_text(
+                        self._t(update, "err_generic", error=str(exc))
+                    )
+                    context.chat_data["awaiting_compress_target"] = True
+                    await context.bot.send_message(
+                        chat_id=update.effective_chat.id,
+                        text=self._t(update, "action_compress_prompt"),
+                    )
 
     async def _process_tool_with_input(
         self,

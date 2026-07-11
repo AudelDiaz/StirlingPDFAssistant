@@ -53,6 +53,9 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "action_complete": "✅ Complete! Uploading...",
         "prompt_split_pages": "Please enter the page numbers or ranges to extract (e.g., '1,3,5-10' or 'all'):",
         "prompt_redact_text": "Please enter the keywords to redact (comma-separated):",
+        "action_compress_prompt": "Enter desired file size e.g. '10MB' (or just '10'), or send 'skip' / 'default' for compression without target size:",
+        "action_compressing": "🗜 Compressing with grayscale & linearize...",
+        "err_compress_invalid": "❌ Invalid input. Send a file size like '10MB' (or just '10'), or send 'skip' / 'default':",
         "action_encrypting": "🔒 Encrypting...",
         "action_password_prompt": "Please type the password:",
         "err_session_expired": "Session expired.",
@@ -68,7 +71,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "action_converting_md": "📝 Converting Markdown to PDF... Please wait.",
         "btn_file_to_pdf": "📄 Convert to PDF",
         "msg_received_file_convert": "Document received: `{name}`\nConvert to PDF?",
-        "action_converting_file": "📄 Converting document to PDF... Please wait."
+        "action_converting_file": "📄 Converting document to PDF... Please wait.",
     },
     "es": {
         "start_greeting": "¡Hola {name}! 🤖 Soy tu Asistente Stirling PDF.\n\n• Envía cualquier **PDF** para acciones rápidas.\n• Envía **Fotos** para convertirlas o /merge.\n• Envía **Documentos** (Word, PPT, MD, etc.) para convertirlos a PDF.\n• Envía un **Link** para convertir una web a PDF.\n• Escribe /help para la guía completa.",
@@ -122,6 +125,9 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "action_complete": "✅ ¡Completado! Subiendo...",
         "prompt_split_pages": "Por favor introduce los números de página o rangos a extraer (ej., '1,3,5-10' o 'all'):",
         "prompt_redact_text": "Por favor introduce las palabras clave a censurar (separadas por comas):",
+        "action_compress_prompt": "Ingresa el tamaño deseado ej. '10MB' (o solo '10'), o envía 'skip' / 'default' para compresión sin tamaño objetivo:",
+        "action_compressing": "🗜 Comprimiendo con escala de grises y linealización...",
+        "err_compress_invalid": "❌ Entrada inválida. Envía un tamaño como '10MB' (o solo '10'), o envía 'skip' / 'default':",
         "action_encrypting": "🔒 Encriptando...",
         "action_password_prompt": "Por favor escribe la contraseña:",
         "err_session_expired": "Sesión expirada.",
@@ -137,15 +143,16 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "action_converting_md": "📝 Convirtiendo Markdown a PDF... Por favor espera.",
         "btn_file_to_pdf": "📄 Convertir a PDF",
         "msg_received_file_convert": "Documento recibido: `{name}`\n¿Convertir a PDF?",
-        "action_converting_file": "📄 Convirtiendo documento a PDF... Por favor espera."
-    }
+        "action_converting_file": "📄 Convirtiendo documento a PDF... Por favor espera.",
+    },
 }
+
 
 def get_text(lang_code: str, key: str, **kwargs) -> str:
     """Returns translated text for the given key and language code."""
     lang = lang_code.split("-")[0].lower() if lang_code else "en"
     if lang not in TRANSLATIONS:
         lang = "en"
-    
+
     text = TRANSLATIONS[lang].get(key, TRANSLATIONS["en"].get(key, key))
     return text.format(**kwargs)
