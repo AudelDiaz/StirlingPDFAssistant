@@ -94,8 +94,8 @@ python -m stirlingpdf_assistant.main
 With Docker (local development):
 
 ```bash
-docker build -t ghcr.io/audeldiaz/StirlingPDFAssistant:master -f docker/bot/Dockerfile .
-docker build -t ghcr.io/audeldiaz/StirlingPDFAssistant/telegram-bot-api:master -f docker/telegram-bot-api/Dockerfile .
+docker build -t ghcr.io/audeldiaz/stirlingpdfassistant:master -f docker/bot/Dockerfile .
+docker build -t ghcr.io/audeldiaz/stirlingpdfassistant/telegram-bot-api:master -f docker/telegram-bot-api/Dockerfile .
 docker compose up -d
 ```
 
