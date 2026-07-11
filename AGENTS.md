@@ -7,7 +7,7 @@ uv sync                    # install deps (uv, not pip)
 uv sync --group dev        # include dev deps (pytest, coverage)
 python -m stirlingpdf_assistant.main  # run bot
 stirling-bot              # same via entrypoint
-pytest                    # run all tests (src is on sys.path via pyproject.toml)
+pytest                    # run all tests
 pytest tests/test_tools.py -v  # single test file
 ```
 
@@ -30,17 +30,17 @@ pytest tests/test_tools.py -v  # single test file
 - `test_user_manager.py` uses fixture creating `test_users.json` (auto-cleaned)
 - No lint or typecheck config in pyproject.toml — only pytest + coverage for dev
 
-## Config & Run
+## Config and Run
 
 - `.env` with: `TELEGRAM_BOT_TOKEN`, `STIRLING_PDF_URL`, `STIRLING_PDF_API_KEY`, `BOT_OWNER_ID`, `USERS_FILE`, `MAX_CONCURRENT_TASKS`, `MAX_FILE_SIZE_MB`, `API_TIMEOUT`
 - `users.json` persisted via Docker volume (`./users.json:/app/users.json`); file is gitignored
 - Python 3.14 required (`requires-python = ">=3.14"`)
-- Docker: multi-stage, non-root user `appuser:appgroup` (UID 1000), `cmd ["stirling-bot"]`
-- CI (`docker-publish.yml`): two jobs — `build` (main image) and `build-telegram-bot-api` (custom Bot API image). Both build + Trivy scan + push multi-arch to ghcr.io (linux/amd64, linux/arm64)
-- GHCR images referenced in `docker-compose.yml` via `image:` alongside `build:` for dual dev/prod workflow
+- Docker (`docker/bot/Dockerfile`): multi-stage, non-root user `appuser:appgroup` (UID 1000), `cmd ["stirling-bot"]`
+- CI (`docker-publish.yml`): single job with build matrix — `main` image (`docker/bot/Dockerfile`) and `telegram-bot-api` image (`docker/telegram-bot-api/Dockerfile`). Both build + Trivy scan + push multi-arch to ghcr.io (linux/amd64, linux/arm64)
+- GHCR images referenced in `docker-compose.yml` via `image:` — no `build:` keys (images come from CI, not local builds)
 
 ## Quirks
 
 - `scripts/api_validate.py` does not exist — the live validation was moved to `tests/test_integration_api.py`.
 - All tools expose `input_schema` (JSON Schema) for planned MCP compatibility.
-- `docker/telegram-bot-api/Dockerfile` patches the base image UID/GID from 101→1000 via `sed` on `/etc/passwd` and `/etc/group` to match the bot container's GID for shared volume access.
+- `docker/telegram-bot-api/Dockerfile` patches the base image UID/GID from 101 to 1000 via `sed` on `/etc/passwd` and `/etc/group` to match the bot container's GID for shared volume access.

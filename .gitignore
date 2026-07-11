@@ -18,3 +18,6 @@ users.json
 # API Snapshots
 api-*.json
 api_spec.json
+
+# Project docs (kept locally, not tracked)
+docs/plan.md

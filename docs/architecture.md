@@ -1,19 +1,19 @@
 # System Architecture
 
-The Stirling PDF Assistant is designed to run in a resource-constrained environment, such as a Raspberry Pi, providing a private and powerful PDF toolset.
+The Stirling PDF Assistant runs in a Docker setup alongside a local Telegram Bot API server and Stirling PDF. Below is a high-level view of how the components interact.
 
-## High-Level Overview
+## Diagram
 
 ```mermaid
 graph TD
     User((Telegram User))
     
-    subgraph "Raspberry Pi 4B"
+    subgraph "Raspberry Pi"
         direction TB
         TG_API[Telegram Bot API]
         Bot_Logic[Bot Logic / Handlers]
         
-        subgraph "Stirling PDF System"
+        subgraph "Stirling PDF"
             SPDF_API[Stirling PDF API]
             Engines[OCR / LibreOffice / PDFBox]
         end
@@ -28,34 +28,33 @@ graph TD
     Bot_Logic <--> Disk
 ```
 
-## Component Breakdown
+## Components
 
 ### 1. Telegram Bot (Frontend)
-- **Role**: Interface for the user.
-- **Implementation**: Uses `python-telegram-bot`'s `Application` and `Handler` patterns.
-- **Session Management**: Uses `chat_data` to maintain state during multi-step operations (like merging).
+
+The user-facing interface. Uses `python-telegram-bot`'s `Application` and `Handler` patterns. Session state is kept in `chat_data` for multi-step operations like merging.
 
 ### 2. Stirling PDF Client (Middleware)
-- **Role**: Bridges the bot logic with the Stirling PDF API.
-- **Implementation**: `StirlingPDFClient` in `client.py`.
-- **Modularity**: Uses a "Tool" pattern where each API endpoint is represented by a class inheriting from `BaseTool`.
+
+Bridges bot logic with the Stirling PDF API. `StirlingPDFClient` in `client.py` handles multipart uploads. Each API endpoint is represented by a class inheriting from `BaseTool`.
 
 ### 3. Stirling PDF (Backend)
-- **Role**: The heavy lifter that performs the actual PDF transformations.
-- **Implementation**: A separate service (usually in Docker) that exposes a REST API.
 
-### 4. Storage & Persistence
-- **Disk**: Used for temporary file storage and user list persistence.
-- **Environment**: Configuration is handled via `.env` files.
+The service that processes the actual PDF transformations. Runs separately (usually in Docker) and exposes a REST API.
 
-## Data Flow: Document Processing
+### 4. Storage and Persistence
 
-1. User sends a document to the Telegram Bot.
-2. Bot validates user authorization and file size.
-3. Bot presents a menu of available actions (Inline Buttons).
-4. User selects an action (e.g., "OCR").
-5. Bot downloads the file from Telegram servers into memory (as `bytes`).
-6. Bot passes the file to the `StirlingPDFClient`.
-7. Client executes the corresponding `Tool`, sending a `multipart/form-data` POST request to Stirling PDF.
-8. Stirling PDF processes the file and returns the result as a binary stream.
-9. Bot sends the resulting file back to the user via Telegram.
+- Temporary files and user data are stored on disk.
+- Configuration is handled via `.env` files.
+
+## Document Processing Flow
+
+1. User sends a document to the bot.
+2. Bot checks authorization and file size.
+3. Bot shows available actions (inline buttons).
+4. User picks an action.
+5. Bot downloads the file into memory.
+6. Bot passes the file to `StirlingPDFClient`.
+7. Client sends a multipart POST to the Stirling PDF API.
+8. Stirling PDF processes the file and returns the result.
+9. Bot sends the result back to the user.

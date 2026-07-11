@@ -1,4 +1,4 @@
-name: Build and Publish Docker Image
+name: Build and Publish Docker Images
 
 on:
   push:
@@ -9,10 +9,22 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: main
+            context: .
+            file: ./docker/bot/Dockerfile
+            registry: ${{ github.repository }}
+          - name: telegram-bot-api
+            context: ./docker/telegram-bot-api
+            file: ./docker/telegram-bot-api/Dockerfile
+            registry: ${{ github.repository }}/telegram-bot-api
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -46,25 +58,25 @@ jobs:
         # v5 (Latest commit as of check)
         uses: docker/metadata-action@c3b064c6d7c32446d6bc214ea075f1caad2de35a
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ matrix.image.registry }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=sha,format=long
 
-      - name: Build Docker image (locally for scanning)
-        id: build
+      - name: Build ${{ matrix.image.name }} image (locally for scanning)
         # v6 (Latest commit as of check)
         uses: docker/build-push-action@83bfd93ab480705a7b99a2ed02765137f5ab55ba
         with:
-          context: .
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.file }}
           push: false
           load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}
 
       # Security Scanning: Use Trivy to find vulnerabilities
       - name: Run Trivy vulnerability scanner
@@ -78,16 +90,17 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-      - name: Push Docker image
+      - name: Push ${{ matrix.image.name }} image
         # Only push if it's not a PR and after successful scan
         if: github.event_name != 'pull_request'
         # v6 (Latest commit as of check)
         uses: docker/build-push-action@83bfd93ab480705a7b99a2ed02765137f5ab55ba
         with:
-          context: .
+          context: ${{ matrix.image.context }}
+          file: ${{ matrix.image.file }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.image.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image.name }}
