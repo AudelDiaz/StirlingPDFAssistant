@@ -11,11 +11,16 @@ A production-grade Telegram bot optimized for **Raspberry Pi** and low-resource 
 - **⚡ Resource Aware**: Concurrency throttling (Semaphores) and file size safeguards to protect your Raspberry Pi.
 - **📝 Private OCR**: Optical Character Recognition using your own Stirling instance.
 - **✂️ Advanced Tools**:
-  - **Auto Redact**: Mask sensitive info (emails, IDs) automatically.
-  - **Split PDF**: Extract specific page ranges (e.g., `1,3,5-10`).
-  - **URL to PDF**: Send a link, get a clean PDF document back instantly.
-  - **Hybrid Merge**: Mix Photos and PDFs into a single document seamlessly.
-  - **Scanner Effect**: Make digital docs look like scanned paper documents.
+  - **🗜 Compress**: Reduce file size with optional target size, grayscale, and linearize.
+  - **🔍 OCR**: Make scanned PDFs searchable.
+  - **🔒 Password**: Encrypt PDFs with a secure password.
+  - **📝 To Word**: Convert PDFs to editable `.docx` files.
+  - **🛡 Auto Redact**: Mask sensitive info (emails, IDs) automatically.
+  - **✂️ Split PDF**: Extract specific page ranges (e.g., `1,3,5-10`).
+  - **🌐 URL to PDF**: Send a link, get a clean PDF document back instantly.
+  - **📚 Hybrid Merge**: Mix Photos and PDFs into a single document seamlessly.
+  - **🖨 Scanner Effect**: Make digital docs look like scanned paper documents.
+  - **📄 File to PDF**: Convert Office docs, Markdown, and text files to PDF.
 
 ## 🏗️ Architecture
 
@@ -53,6 +58,7 @@ stirlingpdf-assistant/
 ├── .env.example        # Environment variable template
 ├── AGENTS.md           # Developer onboarding and quirks
 ├── docker-compose.yml  # Docker Compose orchestration
+├── LICENSE             # MIT License
 └── pyproject.toml      # Project dependencies and metadata
 ```
 
@@ -105,7 +111,7 @@ Both images are built with multi-arch support (linux/amd64, linux/arm64) via a G
 
 ## 🐋 Docker & Raspberry Pi Optimization
 
-The included `Dockerfile` uses a multi-stage build and a non-root user for maximum security and reduced image size, making it ideal for 64-bit ARM boards (Pi 4/5).
+The included `docker/bot/Dockerfile` uses a multi-stage build and a non-root user for maximum security and reduced image size, making it ideal for 64-bit ARM boards (Pi 4/5).
 
 ### 📥 Handling Large Files (Local Telegram Bot API Server)
 
@@ -120,8 +126,8 @@ The local server removes all download size restrictions and can handle files up 
 ### 🔑 Shared Volume UID Matching
 
 Both containers share a Docker volume (`telegram-bot-api-data`) for file access:
-- **telegram-bot-api** runs as UID 1000 (`appuser`) via `docker/telegram-bot-api/Dockerfile`.
-- **stirlingpdfassistant** also runs as UID 1000 via the multi-stage build.
+- **telegram-bot-api** runs as UID 1000 (user `telegram-bot-api`) via `docker/telegram-bot-api/Dockerfile`.
+- **stirlingpdfassistant** runs as UID 1000 (user `appuser`) via the multi-stage build.
 - The custom Bot API Dockerfile patches the base image's UID/GID from 101 → 1000 using `sed` on `/etc/passwd` and `/etc/group`.
 
 This ensures the bot container can read files downloaded by the Bot API server without permission errors.
@@ -138,4 +144,4 @@ pytest tests/test_integration_api.py -v
 ```
 
 ## 📜 License
-MIT License. See `LICENSE` for details.
+MIT License.
