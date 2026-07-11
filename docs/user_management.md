@@ -1,36 +1,39 @@
-# User Management & Access Control
+# User Management and Access Control
 
-To ensure privacy and prevent unauthorized use of system resources, the Stirling PDF Assistant implements a strict access control system.
+The bot uses a whitelist to control who can send commands. Unauthorized users are prompted to request access from the owner.
 
-## Authentication Mechanism
+## How It Works
 
-The bot uses a **whitelisting** approach. Every incoming message is intercepted by the `restricted` decorator (`decorators.py`), which checks the user's ID against a list of authorized IDs.
+Every incoming message goes through the `restricted` decorator in `decorators.py`. It checks the user's Telegram ID against a list of authorized IDs stored in a JSON file.
 
 ### The Owner
-A single `BOT_OWNER_ID` is defined in the environment variables. This user:
+
+`BOT_OWNER_ID` is set in the environment. The owner:
+
 - Is always authorized.
-- Can add or remove other users via commands.
+- Can add and remove users via commands.
 - Receives access requests from new users.
 
-## Access Request Workflow
+### Access Request Flow
 
-When an unauthorized user starts the bot:
-1. They see a "Request Access" button.
-2. Clicking it prompts them to share their **Contact** (providing their name, user ID, and phone number).
-3. This information is forwarded to the **Owner**.
-4. The Owner receives an interactive message with "Approve" and "Deny" buttons.
-5. If approved, the user's ID is added to the authorized list, and they receive a notification.
+1. An unauthorized user sends `/start`.
+2. They see a button to share their contact info.
+3. The request (name, user ID, phone number) is forwarded to the owner.
+4. The owner sees an inline message with Approve and Deny buttons.
+5. If approved, the user's ID is added to the whitelist and they get a confirmation.
 
 ## Persistence
 
-The authorized user list is stored in a JSON file (default: `users.json`). The `UserManager` class handles:
-- Loading the list on startup.
-- Saving changes immediately when a user is added or removed.
-- Ensuring the owner cannot be accidentally removed from the list.
+The authorized user list is stored in `users.json` (configurable via `USERS_FILE`). The `UserManager` class:
+
+- Loads the list on startup.
+- Saves changes immediately when users are added or removed.
+- Prevents the owner from being removed.
 
 ## Admin Commands
 
-The following commands are available only to the **Owner**:
-- `/add_user <user_id>`: Manually authorize a user.
-- `/remove_user <user_id>`: Revoke a user's access.
-- `/list_users`: View all authorized user IDs.
+Only available to the owner:
+
+- `/add_user <id>` — manually authorize a user.
+- `/remove_user <id>` — revoke a user's access.
+- `/list_users` — show all authorized user IDs.

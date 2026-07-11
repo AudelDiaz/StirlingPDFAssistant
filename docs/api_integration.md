@@ -1,15 +1,11 @@
-# API Integration & Tooling
+# API Integration and Tooling
 
-The integration with Stirling PDF is designed to be extensible and follows patterns seen in the **Model Context Protocol (MCP)**.
+The bot communicates with Stirling PDF through a set of Tool classes. Each Tool wraps one API endpoint and knows how to build the multipart payload.
 
 ## The Tool Pattern
 
-Every PDF operation is encapsulated in a "Tool" class inheriting from `BaseTool`. This approach provides several benefits:
-- **Consistency**: All tools share a similar structure for input validation and payload preparation.
-- **Extensibility**: Adding a new Stirling PDF feature only requires creating a new Tool class.
-- **AI-Readiness**: The `input_schema` property (JSON Schema) allows an LLM to understand what parameters a tool requires.
+Every operation is a class that inherits from `BaseTool`. This keeps things consistent: each tool has a name, description, endpoint, input schema, and a `prepare_payload` method.
 
-### BaseTool Interface
 ```python
 class BaseTool(abc.ABC):
     @property
@@ -32,31 +28,28 @@ class BaseTool(abc.ABC):
     def prepare_payload(self, **kwargs) -> Tuple[List[tuple], Dict[str, Any]]: ...
 ```
 
-## Supported Operations
-
-Currently, the following tools are implemented:
+## Tools
 
 | Tool Class | Stirling Endpoint | Purpose |
 | :--- | :--- | :--- |
-| `CompressPDFTool` | `/api/v1/misc/compress-pdf` | Reduce file size (supports target size, grayscale, linearize). |
+| `CompressPDFTool` | `/api/v1/misc/compress-pdf` | Reduce file size (target size, grayscale, linearize). |
 | `OCRPDFTool` | `/api/v1/misc/ocr-pdf` | Make PDFs searchable. |
 | `MergePDFsTool` | `/api/v1/general/merge-pdfs` | Combine multiple PDFs. |
 | `SplitPDFTool` | `/api/v1/general/split-pages` | Extract specific page ranges. |
-| `ScannerEffectTool` | `/api/v1/misc/scanner-effect` | Apply "scanned" look to digital docs. |
+| `ScannerEffectTool` | `/api/v1/misc/scanner-effect` | Make digital docs look scanned. |
 | `AddPasswordTool` | `/api/v1/security/add-password` | Encrypt PDF with a password. |
-| `AutoRedactTool` | `/api/v1/security/auto-redact` | Mask sensitive keywords automatically. |
+| `AutoRedactTool` | `/api/v1/security/auto-redact` | Mask keywords in a PDF. |
 | `ImagesToPDFTool` | `/api/v1/convert/img/pdf` | Convert images to PDF. |
 | `PdfToWordTool` | `/api/v1/convert/pdf/word` | Convert PDF to .docx. |
 | `URLToPDFTool` | `/api/v1/convert/url/pdf` | Convert a web URL to PDF. |
-| `MarkdownToPDFTool` | `/api/v1/convert/markdown/pdf` | Convert Markdown text to PDF. |
-| `FileToPDFTool` | `/api/v1/convert/file/pdf` | Convert Office docs (Word, PPT, text) to PDF. |
+| `MarkdownToPDFTool` | `/api/v1/convert/markdown/pdf` | Convert Markdown to PDF. |
+| `FileToPDFTool` | `/api/v1/convert/file/pdf` | Convert Office docs, text to PDF. |
 
 ## Client Execution
 
-The `StirlingPDFClient` acts as the executor for these tools:
+`StirlingPDFClient` takes a tool instance and keyword arguments, calls `prepare_payload`, and sends the request:
 
 ```python
-# Example execution
 result_bytes = await client.execute(
     ocr_tool, 
     file_content=raw_bytes, 
@@ -65,7 +58,7 @@ result_bytes = await client.execute(
 ```
 
 The client handles:
-- URL construction.
-- Authentication (`X-API-Key`).
-- Multipart payload generation (via the Tool's `prepare_payload`).
+- URL construction (base URL + endpoint).
+- Authentication via `X-API-Key` header.
+- Multipart payload assembly.
 - Error handling and response parsing.
